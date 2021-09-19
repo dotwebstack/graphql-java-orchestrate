@@ -1,0 +1,8 @@
+type Query {
+  brewery(identifier: ID!): Brewery
+}
+
+type Brewery {
+  identifier: ID!
+  name: String!
+}
