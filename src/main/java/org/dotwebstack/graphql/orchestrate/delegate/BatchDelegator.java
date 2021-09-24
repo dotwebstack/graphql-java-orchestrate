@@ -56,7 +56,7 @@ public class BatchDelegator extends AbstractDelegator {
 
       var query = buildQuery(rootField);
 
-      return subschema.executeQuery(query)
+      return subschema.execute(query)
           .thenApply(this::processResult);
     });
   }

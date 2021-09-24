@@ -22,7 +22,7 @@ public class Subschema {
 
   private final List<Transform> transforms = List.of();
 
-  public CompletableFuture<ExecutionResult> executeQuery(ExecutionInput input) {
+  public CompletableFuture<ExecutionResult> execute(ExecutionInput input) {
     if (executor != null) {
       return executor.execute(input);
     }

@@ -68,7 +68,7 @@ class SimpleDelegationTest {
   }
 
   private SimpleDelegator builDelegator(String fieldName, Object data, ArgsFromEnvFunction argsFromEnv) {
-    when(subschema.executeQuery(queryCaptor.capture()))
+    when(subschema.execute(queryCaptor.capture()))
         .thenReturn(CompletableFuture.completedFuture(
             ExecutionResultImpl.newExecutionResult()
                 .data(Map.of(fieldName, data))
