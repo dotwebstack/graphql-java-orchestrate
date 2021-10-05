@@ -4,18 +4,14 @@ import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
-import lombok.Builder;
-import lombok.Getter;
 import org.dotwebstack.graphql.orchestrate.delegate.SimpleDelegator;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 
-@Builder
-@Getter
 public class SchemaWrapper {
 
-  private final Subschema subschema;
+  private SchemaWrapper() {}
 
-  public GraphQLSchema wrap() {
+  public static GraphQLSchema wrap(Subschema subschema) {
     var originalSchema = subschema.getSchema();
 
     // Wrapped schema gets it own fresh code registry
@@ -25,7 +21,7 @@ public class SchemaWrapper {
     originalSchema.getQueryType()
         .getFieldDefinitions()
         .forEach(fieldDefinition -> codeRegistryBuilder.dataFetcher(
-            originalSchema.getQueryType(), fieldDefinition, createDataFetcher(fieldDefinition)));
+            originalSchema.getQueryType(), fieldDefinition, createDataFetcher(subschema, fieldDefinition)));
 
     // Create new schema with fresh code registry
     var wrappedSchema = originalSchema.transform(builder ->
@@ -39,7 +35,7 @@ public class SchemaWrapper {
     return wrappedSchema;
   }
 
-  private DataFetcher<Object> createDataFetcher(GraphQLFieldDefinition fieldDefinition) {
+  private static DataFetcher<Object> createDataFetcher(Subschema subschema, GraphQLFieldDefinition fieldDefinition) {
     var delegator = SimpleDelegator.builder()
         .subschema(subschema)
         .fieldName(fieldDefinition.getName())
