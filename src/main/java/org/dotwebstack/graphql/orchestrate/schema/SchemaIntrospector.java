@@ -15,8 +15,8 @@ public class SchemaIntrospector {
 
   public static CompletableFuture<TypeDefinitionRegistry> introspectSchema(Executor executor) {
     return executor.execute(ExecutionInput.newExecutionInput()
-            .query(INTROSPECTION_QUERY)
-            .build())
+        .query(INTROSPECTION_QUERY)
+        .build())
         .thenApply(new IntrospectionResultToSchema()::createSchemaDefinition)
         .thenApply(SchemaIntrospector::buildTypeDefinitionRegistry);
   }

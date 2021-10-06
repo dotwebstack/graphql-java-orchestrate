@@ -47,8 +47,7 @@ public class RenameObjectFields implements Transform {
             .map(fieldDefinition -> transformField(objectType, fieldDefinition))
             .collect(Collectors.toList());
 
-        return changeNode(context, objectType.transform(builder ->
-            builder.replaceFields(fieldDefinitions)));
+        return changeNode(context, objectType.transform(builder -> builder.replaceFields(fieldDefinitions)));
       }
     };
 
@@ -73,9 +72,8 @@ public class RenameObjectFields implements Transform {
             .getType();
 
         if (fieldType instanceof GraphQLFieldsContainer) {
-          var newSelectionSet = transformSelectionSet(
-              field.getSelectionSet(),
-              ((GraphQLFieldsContainer) fieldType).getName());
+          var newSelectionSet =
+              transformSelectionSet(field.getSelectionSet(), ((GraphQLFieldsContainer) fieldType).getName());
 
           return TreeTransformerUtil.changeNode(environment.getTraverserContext(),
               field.transform(builder -> builder.selectionSet(newSelectionSet)));
@@ -102,6 +100,18 @@ public class RenameObjectFields implements Transform {
     return fieldDefinition.transform(builder -> builder.name(newName));
   }
 
+  private Field transformField(Field field, String typeName) {
+    var originalName = nameMapping.containsKey(typeName) ? nameMapping.get(typeName)
+        .get(field.getName()) : null;
+
+    if (originalName == null) {
+      return field;
+    }
+
+    return field.transform(builder -> builder.name(originalName)
+        .alias(field.getName()));
+  }
+
   private SelectionSet transformSelectionSet(SelectionSet selectionSet, String typeName) {
     var newSelections = selectionSet.getSelections()
         .stream()
@@ -123,24 +133,11 @@ public class RenameObjectFields implements Transform {
     return selection;
   }
 
-  private Field transformField(Field field, String typeName) {
-    var originalName = nameMapping.containsKey(typeName) ?
-        nameMapping.get(typeName)
-            .get(field.getName()) : null;
-
-    if (originalName == null) {
-      return field;
-    }
-
-    return field.transform(builder -> builder.name(originalName)
-        .alias(field.getName()));
-  }
-
   private InlineFragment transformInlineFragment(InlineFragment inlineFragment) {
     var typeName = inlineFragment.getTypeCondition()
         .getName();
 
-    return inlineFragment.transform(builder -> builder.selectionSet(
-        transformSelectionSet(inlineFragment.getSelectionSet(), typeName)));
+    return inlineFragment
+        .transform(builder -> builder.selectionSet(transformSelectionSet(inlineFragment.getSelectionSet(), typeName)));
   }
 }

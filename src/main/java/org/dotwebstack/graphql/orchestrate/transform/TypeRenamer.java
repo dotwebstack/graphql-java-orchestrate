@@ -1,6 +1,5 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
-import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLNamedType;
 
 @FunctionalInterface

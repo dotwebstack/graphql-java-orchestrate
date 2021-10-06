@@ -33,8 +33,7 @@ public class FilterObjectFields implements Transform {
           throw new IllegalStateException("Object types must contain at least 1 field.");
         }
 
-        return changeNode(context, objectType.transform(builder ->
-            builder.replaceFields(fieldDefinitions)));
+        return changeNode(context, objectType.transform(builder -> builder.replaceFields(fieldDefinitions)));
       }
     };
 

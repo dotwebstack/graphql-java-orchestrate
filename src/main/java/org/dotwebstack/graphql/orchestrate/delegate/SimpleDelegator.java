@@ -20,8 +20,7 @@ public class SimpleDelegator extends AbstractDelegator {
 
   public CompletableFuture<Object> delegate(DataFetchingEnvironment environment) {
     var rootField = environment.getField()
-        .transform(builder -> builder
-            .name(fieldName)
+        .transform(builder -> builder.name(fieldName)
             .arguments(argsFromEnv.apply(environment)));
 
     var query = buildQuery(rootField);

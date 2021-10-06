@@ -20,12 +20,11 @@ public class SchemaWrapper {
     // Attach delegate fetchers for all root fields
     originalSchema.getQueryType()
         .getFieldDefinitions()
-        .forEach(fieldDefinition -> codeRegistryBuilder.dataFetcher(
-            originalSchema.getQueryType(), fieldDefinition, createDataFetcher(subschema, fieldDefinition)));
+        .forEach(fieldDefinition -> codeRegistryBuilder.dataFetcher(originalSchema.getQueryType(), fieldDefinition,
+            createDataFetcher(subschema, fieldDefinition)));
 
     // Create new schema with fresh code registry
-    var wrappedSchema = originalSchema.transform(builder ->
-        builder.codeRegistry(codeRegistryBuilder.build()));
+    var wrappedSchema = originalSchema.transform(builder -> builder.codeRegistry(codeRegistryBuilder.build()));
 
     // Apply schema transforms
     for (var transform : subschema.getTransforms()) {

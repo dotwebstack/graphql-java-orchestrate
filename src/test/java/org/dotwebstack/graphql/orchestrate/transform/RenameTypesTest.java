@@ -20,8 +20,7 @@ class RenameTypesTest {
   @BeforeEach
   void setUp() {
     schema = loadSchema("dbeerpedia");
-    transform = new RenameTypes((typeName, typeDefinition) ->
-        typeName.equals("Brewery") ? "Company" : typeName);
+    transform = new RenameTypes((typeName, typeDefinition) -> typeName.equals("Brewery") ? "Company" : typeName);
   }
 
   @Test

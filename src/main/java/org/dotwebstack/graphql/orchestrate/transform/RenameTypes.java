@@ -41,12 +41,14 @@ public class RenameTypes implements Transform {
 
     var typeVisitor = new GraphQLTypeVisitorStub() {
       @Override
-      public TraversalControl visitGraphQLInterfaceType(GraphQLInterfaceType type, TraverserContext<GraphQLSchemaElement> context) {
+      public TraversalControl visitGraphQLInterfaceType(GraphQLInterfaceType type,
+          TraverserContext<GraphQLSchemaElement> context) {
         return changeNode(context, type.transform(builder -> builder.name(renameType(type))));
       }
 
       @Override
-      public TraversalControl visitGraphQLObjectType(GraphQLObjectType type, TraverserContext<GraphQLSchemaElement> context) {
+      public TraversalControl visitGraphQLObjectType(GraphQLObjectType type,
+          TraverserContext<GraphQLSchemaElement> context) {
         return changeNode(context, type.transform(builder -> builder.name(renameType(type))));
       }
     };
@@ -73,9 +75,8 @@ public class RenameTypes implements Transform {
             .getType();
 
         if (fieldType instanceof GraphQLFieldsContainer) {
-          var newSelectionSet = transformSelectionSet(
-              field.getSelectionSet(),
-              ((GraphQLFieldsContainer) fieldType).getName());
+          var newSelectionSet =
+              transformSelectionSet(field.getSelectionSet(), ((GraphQLFieldsContainer) fieldType).getName());
 
           return TreeTransformerUtil.changeNode(environment.getTraverserContext(),
               field.transform(builder -> builder.selectionSet(newSelectionSet)));
@@ -125,8 +126,7 @@ public class RenameTypes implements Transform {
       return inlineFragment;
     }
 
-    return inlineFragment.transform(builder -> builder.typeCondition(
-        TypeName.newTypeName(nameMapping.get(typeName))
-            .build()));
+    return inlineFragment.transform(builder -> builder.typeCondition(TypeName.newTypeName(nameMapping.get(typeName))
+        .build()));
   }
 }

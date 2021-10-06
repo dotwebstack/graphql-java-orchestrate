@@ -24,8 +24,7 @@ import java.util.Optional;
 
 public class TestUtil {
 
-  private TestUtil() {
-  }
+  private TestUtil() {}
 
   public static OperationDefinition parseQuery(String query) {
     return Parser.parse(query)
@@ -36,7 +35,8 @@ public class TestUtil {
   }
 
   public static GraphQLSchema loadSchema(String name) {
-    return loadSchema(name, GraphQLCodeRegistry.newCodeRegistry().build());
+    return loadSchema(name, GraphQLCodeRegistry.newCodeRegistry()
+        .build());
   }
 
   public static GraphQLSchema loadSchema(String name, GraphQLCodeRegistry codeRegistry) {
@@ -51,8 +51,7 @@ public class TestUtil {
     TypeDefinitionRegistry typeDefinitionRegistry;
 
     try {
-      typeDefinitionRegistry = new SchemaParser()
-          .parse(schemaResource.openStream());
+      typeDefinitionRegistry = new SchemaParser().parse(schemaResource.openStream());
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
@@ -61,8 +60,7 @@ public class TestUtil {
         .codeRegistry(codeRegistry)
         .build();
 
-    return new SchemaGenerator()
-        .makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
+    return new SchemaGenerator().makeExecutableSchema(typeDefinitionRegistry, runtimeWiring);
   }
 
   public static GraphQLFieldDefinition fieldDefinition(GraphQLSchema schema, String typeName, String fieldName) {
@@ -72,8 +70,7 @@ public class TestUtil {
       return null;
     }
 
-    return ((GraphQLFieldsContainer) type)
-        .getField(fieldName);
+    return ((GraphQLFieldsContainer) type).getField(fieldName);
   }
 
   public static GraphQLOutputType fieldType(GraphQLSchema schema, String typeName, String fieldName) {

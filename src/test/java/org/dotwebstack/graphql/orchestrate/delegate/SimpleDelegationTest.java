@@ -14,8 +14,8 @@ import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import org.dotwebstack.graphql.orchestrate.test.TestUtil;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
+import org.dotwebstack.graphql.orchestrate.test.TestUtil;
 import org.dotwebstack.graphql.orchestrate.util.ValueUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,8 +57,7 @@ class SimpleDelegationTest {
       return List.of(new Argument("arg1", ValueUtil.scalarValueFrom(source.get("key1"))));
     };
 
-    var result = builDelegator("foo", "bar", argsFromEnv)
-        .delegate(environment);
+    var result = builDelegator("foo", "bar", argsFromEnv).delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
@@ -69,13 +68,11 @@ class SimpleDelegationTest {
 
   private SimpleDelegator builDelegator(String fieldName, Object data, ArgsFromEnvFunction argsFromEnv) {
     when(subschema.execute(queryCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(
-            ExecutionResultImpl.newExecutionResult()
-                .data(Map.of(fieldName, data))
-                .build()));
+        .thenReturn(CompletableFuture.completedFuture(ExecutionResultImpl.newExecutionResult()
+            .data(Map.of(fieldName, data))
+            .build()));
 
-    when(environment.getField())
-        .thenReturn(newField(fieldName).build());
+    when(environment.getField()).thenReturn(newField(fieldName).build());
 
     var delegatorBuilder = SimpleDelegator.builder()
         .subschema(subschema)

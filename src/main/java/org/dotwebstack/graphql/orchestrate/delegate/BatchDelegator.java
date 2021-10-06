@@ -30,7 +30,8 @@ public class BatchDelegator extends AbstractDelegator {
     super(builder);
     keyFromEnv = builder.keyFromEnv;
     argsFromKeys = builder.argsFromKeys;
-    dataLoaderKey = UUID.randomUUID().toString();
+    dataLoaderKey = UUID.randomUUID()
+        .toString();
   }
 
   public CompletableFuture<Object> delegate(DataFetchingEnvironment environment) {
@@ -41,8 +42,7 @@ public class BatchDelegator extends AbstractDelegator {
     }
 
     // The first delegation call registers the dataloader
-    dataLoaderRegistry.computeIfAbsent(dataLoaderKey, k ->
-        buildDataLoader(environment.getField()));
+    dataLoaderRegistry.computeIfAbsent(dataLoaderKey, k -> buildDataLoader(environment.getField()));
 
     return environment.getDataLoader(dataLoaderKey)
         .load(keyFromEnv.apply(environment));
@@ -50,9 +50,8 @@ public class BatchDelegator extends AbstractDelegator {
 
   private DataLoader<Object, Object> buildDataLoader(Field field) {
     return DataLoaderFactory.newDataLoader(keys -> {
-      var rootField = field.transform(builder -> builder
-              .name(fieldName)
-              .arguments(argsFromKeys.apply(keys)));
+      var rootField = field.transform(builder -> builder.name(fieldName)
+          .arguments(argsFromKeys.apply(keys)));
 
       var query = buildQuery(rootField);
 

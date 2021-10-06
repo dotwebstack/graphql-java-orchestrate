@@ -25,15 +25,13 @@ public class RemoteExecutor implements Executor {
   private final URI endpoint;
 
   public CompletableFuture<ExecutionResult> execute(ExecutionInput input) {
-    var mapTypeRef = new ParameterizedTypeReference<Map<String, Object>>() {
-    };
+    var mapTypeRef = new ParameterizedTypeReference<Map<String, Object>>() {};
 
     return webClient.post()
         .uri(endpoint)
         .contentType(MediaType.APPLICATION_JSON)
         .accept(MediaType.APPLICATION_JSON)
-        .body(BodyInserters.fromValue(
-            Map.of("query", input.getQuery())))
+        .body(BodyInserters.fromValue(Map.of("query", input.getQuery())))
         .retrieve()
         .bodyToMono(mapTypeRef)
         .map(RemoteExecutor::mapToResult)
