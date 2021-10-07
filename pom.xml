@@ -33,9 +33,11 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
+    <reactive-streams.version>1.0.3</reactive-streams.version>
     <graphl-java.version>17.3</graphl-java.version>
     <spring.version>5.3.10</spring.version>
     <lombok.version>1.18.20</lombok.version>
+    <slf4j.version>1.7.30</slf4j.version>
     <junit.version>5.7.2</junit.version>
     <mockito.version>3.12.4</mockito.version>
     <hamcrest.version>2.2</hamcrest.version>
@@ -44,6 +46,11 @@
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.reactivestreams</groupId>
+      <artifactId>reactive-streams</artifactId>
+      <version>${reactive-streams.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java</artifactId>
@@ -67,6 +74,12 @@
       <artifactId>lombok</artifactId>
       <version>${lombok.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>${slf4j.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
