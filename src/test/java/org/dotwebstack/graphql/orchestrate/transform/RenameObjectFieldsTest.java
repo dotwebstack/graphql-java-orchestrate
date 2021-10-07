@@ -12,7 +12,6 @@ import static org.hamcrest.Matchers.nullValue;
 
 import graphql.language.AstPrinter;
 import graphql.schema.GraphQLSchema;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -44,21 +43,21 @@ class RenameObjectFieldsTest {
   void transformRequest_AddsAlias_ForRegularFields() {
     transform.transformSchema(schema);
 
-    var request = parseQuery("query {brewery(identifier:\"foo\") {identifier label}}");
-    var transformedDocument = transform.transformRequest(request, Map.of());
+    var request = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
+    var transformedRequest = transform.transformRequest(request);
 
-    assertThat(AstPrinter.printAstCompact(transformedDocument),
-        equalTo("query {brewery(identifier:\"foo\") {identifier label:name}}"));
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier label:name}}"));
   }
 
   @Test
   void transformRequest_AddsAlias_ForInlineFragmentFields() {
     transform.transformSchema(schema);
 
-    var request = parseQuery("query {brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
-    var transformedDocument = transform.transformRequest(request, Map.of());
+    var request = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
+    var transformedRequest = transform.transformRequest(request);
 
-    assertThat(AstPrinter.printAstCompact(transformedDocument),
-        equalTo("query {brewery(identifier:\"foo\") {identifier ... on Brewery {label:name}}}"));
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier ... on Brewery {label:name}}}"));
   }
 }

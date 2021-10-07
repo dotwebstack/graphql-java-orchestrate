@@ -1,6 +1,11 @@
 package org.dotwebstack.graphql.orchestrate.delegate;
 
+import graphql.ExecutionInput;
 import graphql.ExecutionResult;
+import graphql.com.google.common.collect.Lists;
+import graphql.language.AstPrinter;
+import graphql.language.OperationDefinition;
+import graphql.language.SelectionSet;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 import java.util.Map;
@@ -8,11 +13,19 @@ import java.util.concurrent.CompletableFuture;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.experimental.SuperBuilder;
+import org.dotwebstack.graphql.orchestrate.Request;
+import org.dotwebstack.graphql.orchestrate.Result;
+import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 
-@SuperBuilder
+@Builder
 @Getter
-public class SimpleDelegator extends AbstractDelegator {
+public class SimpleDelegator implements Delegator {
+
+  @NonNull
+  private final Subschema subschema;
+
+  @NonNull
+  private final String fieldName;
 
   @NonNull
   @Builder.Default
@@ -23,19 +36,39 @@ public class SimpleDelegator extends AbstractDelegator {
         .transform(builder -> builder.name(fieldName)
             .arguments(argsFromEnv.apply(environment)));
 
-    var query = buildQuery(rootField);
+    var request = Request.newRequest()
+        .selectionSet(new SelectionSet(List.of(rootField)))
+        .build();
 
-    return subschema.execute(query)
+    // Apply request transforms in reverse order
+    for (var transform : Lists.reverse(subschema.getTransforms())) {
+      request = transform.transformRequest(request);
+    }
+
+    var operationDefinition = OperationDefinition.newOperationDefinition()
+        .operation(OperationDefinition.Operation.QUERY)
+        .selectionSet(request.getSelectionSet())
+        .build();
+
+    var executionInput = ExecutionInput.newExecutionInput()
+        .query(AstPrinter.printAst(operationDefinition))
+        .build();
+
+    return subschema.execute(executionInput)
         .thenApply(this::processResult);
   }
 
-  private Object processResult(ExecutionResult result) {
-    Map<String, Object> data = result.getData();
+  private Object processResult(ExecutionResult executionResult) {
+    Map<String, Object> resultData = executionResult.getData();
 
-    if (data == null) {
-      return null;
+    var result = Result.newResult()
+        .data(resultData.get(fieldName))
+        .build();
+
+    for (var transform : subschema.getTransforms()) {
+      result = transform.transformResult(result);
     }
 
-    return data.get(fieldName);
+    return result.getData();
   }
 }

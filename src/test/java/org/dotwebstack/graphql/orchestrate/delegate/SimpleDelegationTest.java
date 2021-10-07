@@ -38,7 +38,7 @@ class SimpleDelegationTest {
 
   @Test
   void delegate_DelegatesQueryWithoutArgs_WhenNoArgsGiven() throws Exception {
-    var delegator = builDelegator("foo", "bar", null);
+    var delegator = buildDelegator("foo", "bar", null);
     var result = delegator.delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
@@ -57,7 +57,7 @@ class SimpleDelegationTest {
       return List.of(new Argument("arg1", ValueUtil.scalarValueFrom(source.get("key1"))));
     };
 
-    var result = builDelegator("foo", "bar", argsFromEnv).delegate(environment);
+    var result = buildDelegator("foo", "bar", argsFromEnv).delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
@@ -66,7 +66,7 @@ class SimpleDelegationTest {
     assertThat(queryField, hasStringArgument("arg1", "val1"));
   }
 
-  private SimpleDelegator builDelegator(String fieldName, Object data, ArgsFromEnvFunction argsFromEnv) {
+  private SimpleDelegator buildDelegator(String fieldName, Object data, ArgsFromEnvFunction argsFromEnv) {
     when(subschema.execute(queryCaptor.capture()))
         .thenReturn(CompletableFuture.completedFuture(ExecutionResultImpl.newExecutionResult()
             .data(Map.of(fieldName, data))

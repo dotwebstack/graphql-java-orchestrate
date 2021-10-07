@@ -42,15 +42,6 @@ public class SchemaWrapper {
             .getArguments())
         .build();
 
-    return environment -> delegator.delegate(environment)
-        .thenApply(data -> {
-          var transformedData = data;
-
-          for (var transform : subschema.getTransforms()) {
-            transformedData = transform.transformResult(transformedData);
-          }
-
-          return transformedData;
-        });
+    return delegator::delegate;
   }
 }

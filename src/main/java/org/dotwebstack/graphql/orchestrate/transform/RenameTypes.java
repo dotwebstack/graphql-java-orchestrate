@@ -4,7 +4,6 @@ import graphql.analysis.QueryTransformer;
 import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.analysis.QueryVisitorStub;
 import graphql.language.InlineFragment;
-import graphql.language.OperationDefinition;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
 import graphql.language.TypeName;
@@ -22,6 +21,7 @@ import graphql.util.TreeTransformerUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.dotwebstack.graphql.orchestrate.Request;
 
 public class RenameTypes implements Transform {
 
@@ -57,13 +57,13 @@ public class RenameTypes implements Transform {
   }
 
   @Override
-  public OperationDefinition transformRequest(OperationDefinition operationDefinition, Map<String, Object> variables) {
+  public Request transformRequest(Request request) {
     var queryTransformer = QueryTransformer.newQueryTransformer()
         .schema(originalSchema)
-        .root(operationDefinition)
+        .root(request.getSelectionSet())
         .rootParentType(originalSchema.getQueryType())
         .fragmentsByName(Map.of())
-        .variables(variables)
+        .variables(Map.of())
         .build();
 
     var queryVisitor = new QueryVisitorStub() {
@@ -86,7 +86,10 @@ public class RenameTypes implements Transform {
       }
     };
 
-    return (OperationDefinition) queryTransformer.transform(queryVisitor);
+    var newSelectionSet = (SelectionSet) queryTransformer.transform(queryVisitor);
+
+    return request.transform(builder -> builder.selectionSet(newSelectionSet)
+        .build());
   }
 
   private String renameType(GraphQLNamedType type) {

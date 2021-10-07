@@ -21,17 +21,23 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import org.dotwebstack.graphql.orchestrate.Request;
 
 public class TestUtil {
 
   private TestUtil() {}
 
-  public static OperationDefinition parseQuery(String query) {
-    return Parser.parse(query)
+  public static Request parseQuery(String query) {
+    var selectionSet = Parser.parse(query)
         .getDefinitionsOfType(OperationDefinition.class)
         .stream()
         .findFirst()
-        .orElseThrow();
+        .orElseThrow()
+        .getSelectionSet();
+
+    return Request.newRequest()
+        .selectionSet(selectionSet)
+        .build();
   }
 
   public static GraphQLSchema loadSchema(String name) {

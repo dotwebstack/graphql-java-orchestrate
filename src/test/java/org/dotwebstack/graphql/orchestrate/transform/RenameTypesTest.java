@@ -7,7 +7,6 @@ import static org.hamcrest.Matchers.equalTo;
 
 import graphql.language.AstPrinter;
 import graphql.schema.GraphQLSchema;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,10 +26,10 @@ class RenameTypesTest {
   void transformRequest_AddsAlias_ForInlineFragmentFields() {
     transform.transformSchema(schema);
 
-    var request = parseQuery("query {brewery(identifier:\"foo\") {identifier ... on Company {name}}}");
-    var transformedDocument = transform.transformRequest(request, Map.of());
+    var request = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Company {name}}}");
+    var transformedRequest = transform.transformRequest(request);
 
-    assertThat(AstPrinter.printAstCompact(transformedDocument),
-        equalTo("query {brewery(identifier:\"foo\") {identifier ... on Brewery {name}}}"));
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier ... on Brewery {name}}}"));
   }
 }

@@ -1,8 +1,8 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
-import graphql.language.OperationDefinition;
 import graphql.schema.GraphQLSchema;
-import java.util.Map;
+import org.dotwebstack.graphql.orchestrate.Request;
+import org.dotwebstack.graphql.orchestrate.Result;
 
 public interface Transform {
 
@@ -10,11 +10,11 @@ public interface Transform {
     return schema;
   }
 
-  default OperationDefinition transformRequest(OperationDefinition operationDefinition, Map<String, Object> variables) {
-    return operationDefinition;
+  default Request transformRequest(Request originalRequest) {
+    return originalRequest;
   }
 
-  default Object transformResult(Object data) {
-    return data;
+  default Result transformResult(Result originalResult) {
+    return originalResult;
   }
 }
