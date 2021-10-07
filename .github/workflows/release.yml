@@ -15,11 +15,11 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
         with:
-          ref: v0.3
+          fetch-depth: 0
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
