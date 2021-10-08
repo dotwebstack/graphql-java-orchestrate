@@ -9,17 +9,18 @@ import graphql.schema.SchemaTransformer;
 import graphql.util.TraversalControl;
 import graphql.util.TraverserContext;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 
 public class FilterObjectFields implements Transform {
 
   private final ObjectFieldFilter filter;
 
-  public FilterObjectFields(ObjectFieldFilter filter) {
+  public FilterObjectFields(@NonNull ObjectFieldFilter filter) {
     this.filter = filter;
   }
 
   @Override
-  public GraphQLSchema transformSchema(GraphQLSchema schema) {
+  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
     var typeVisitor = new GraphQLTypeVisitorStub() {
       @Override
       public TraversalControl visitGraphQLObjectType(GraphQLObjectType objectType,
@@ -37,7 +38,7 @@ public class FilterObjectFields implements Transform {
       }
     };
 
-    return SchemaTransformer.transformSchema(schema, typeVisitor);
+    return SchemaTransformer.transformSchema(originalSchema, typeVisitor);
   }
 
   private boolean filterField(GraphQLObjectType objectType, GraphQLFieldDefinition fieldDefinition) {

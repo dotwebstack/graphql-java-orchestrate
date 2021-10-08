@@ -4,6 +4,7 @@ import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLCodeRegistry;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLSchema;
+import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.delegate.SimpleDelegator;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 
@@ -11,7 +12,7 @@ public class SchemaWrapper {
 
   private SchemaWrapper() {}
 
-  public static GraphQLSchema wrap(Subschema subschema) {
+  public static GraphQLSchema wrap(@NonNull Subschema subschema) {
     var originalSchema = subschema.getSchema();
 
     // Wrapped schema gets it own fresh code registry

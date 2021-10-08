@@ -3,6 +3,7 @@ package org.dotwebstack.graphql.orchestrate.delegate;
 import static graphql.language.Field.newField;
 import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasStringArgument;
 import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasZeroArguments;
+import static org.dotwebstack.graphql.orchestrate.util.ValueUtil.scalarValueFrom;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.when;
@@ -16,7 +17,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 import org.dotwebstack.graphql.orchestrate.test.TestUtil;
-import org.dotwebstack.graphql.orchestrate.util.ValueUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -54,7 +54,7 @@ class SimpleDelegationTest {
 
     ArgsFromEnvFunction argsFromEnv = env -> {
       Map<String, Object> source = env.getSource();
-      return List.of(new Argument("arg1", ValueUtil.scalarValueFrom(source.get("key1"))));
+      return List.of(new Argument("arg1", scalarValueFrom(source.get("key1"))));
     };
 
     var result = buildDelegator("foo", "bar", argsFromEnv).delegate(environment);

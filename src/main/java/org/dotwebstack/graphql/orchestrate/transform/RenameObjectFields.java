@@ -20,6 +20,7 @@ import graphql.util.TreeTransformerUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
 
 public class RenameObjectFields implements Transform {
@@ -30,13 +31,13 @@ public class RenameObjectFields implements Transform {
 
   private GraphQLSchema originalSchema;
 
-  public RenameObjectFields(ObjectFieldRenamer renamer) {
+  public RenameObjectFields(@NonNull ObjectFieldRenamer renamer) {
     this.renamer = renamer;
   }
 
   @Override
-  public GraphQLSchema transformSchema(GraphQLSchema schema) {
-    originalSchema = schema;
+  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
+    this.originalSchema = originalSchema;
 
     var typeVisitor = new GraphQLTypeVisitorStub() {
       @Override
@@ -51,11 +52,11 @@ public class RenameObjectFields implements Transform {
       }
     };
 
-    return SchemaTransformer.transformSchema(schema, typeVisitor);
+    return SchemaTransformer.transformSchema(originalSchema, typeVisitor);
   }
 
   @Override
-  public Request transformRequest(Request request) {
+  public Request transformRequest(@NonNull Request request) {
     var queryTransformer = QueryTransformer.newQueryTransformer()
         .schema(originalSchema)
         .root(request.getSelectionSet())

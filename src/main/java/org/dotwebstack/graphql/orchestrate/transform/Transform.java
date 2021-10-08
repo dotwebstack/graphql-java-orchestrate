@@ -6,8 +6,8 @@ import org.dotwebstack.graphql.orchestrate.Result;
 
 public interface Transform {
 
-  default GraphQLSchema transformSchema(GraphQLSchema schema) {
-    return schema;
+  default GraphQLSchema transformSchema(GraphQLSchema originalSchema) {
+    return originalSchema;
   }
 
   default Request transformRequest(Request originalRequest) {

@@ -7,12 +7,13 @@ import graphql.language.ScalarValue;
 import graphql.language.StringValue;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import lombok.NonNull;
 
 public class ValueUtil {
 
   private ValueUtil() {}
 
-  public static ScalarValue<?> scalarValueFrom(Object input) {
+  public static ScalarValue<?> scalarValueFrom(@NonNull Object input) {
     if (input instanceof String) {
       return new StringValue((String) input);
     }

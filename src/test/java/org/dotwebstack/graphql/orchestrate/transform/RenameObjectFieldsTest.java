@@ -17,31 +17,32 @@ import org.junit.jupiter.api.Test;
 
 class RenameObjectFieldsTest {
 
-  private GraphQLSchema schema;
+  private GraphQLSchema originalSchema;
 
   private RenameObjectFields transform;
 
   @BeforeEach
   void setUp() {
-    schema = loadSchema("dbeerpedia");
+    originalSchema = loadSchema("dbeerpedia");
     transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
   }
 
   @Test
   void transformSchema_RenamesField_UsingRenamer() {
-    var transformedSchema = transform.transformSchema(schema);
+    var transformedSchema = transform.transformSchema(originalSchema);
 
-    assertThat(fieldType(transformedSchema, "Brewery", "label"), is(fieldType(schema, "Brewery", "name")));
-    assertThat(fieldArguments(transformedSchema, "Brewery", "label"), is(fieldArguments(schema, "Brewery", "name")));
+    assertThat(fieldType(transformedSchema, "Brewery", "label"), is(fieldType(originalSchema, "Brewery", "name")));
+    assertThat(fieldArguments(transformedSchema, "Brewery", "label"),
+        is(fieldArguments(originalSchema, "Brewery", "name")));
     assertThat(fieldDefinition(transformedSchema, "Brewery", "identifier"),
-        is(fieldDefinition(schema, "Brewery", "identifier")));
+        is(fieldDefinition(originalSchema, "Brewery", "identifier")));
     assertThat(fieldDefinition(transformedSchema, "Brewery", "name"), is(nullValue()));
   }
 
   @Test
   void transformRequest_AddsAlias_ForRegularFields() {
-    transform.transformSchema(schema);
+    transform.transformSchema(originalSchema);
 
     var request = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
     var transformedRequest = transform.transformRequest(request);
@@ -52,7 +53,7 @@ class RenameObjectFieldsTest {
 
   @Test
   void transformRequest_AddsAlias_ForInlineFragmentFields() {
-    transform.transformSchema(schema);
+    transform.transformSchema(originalSchema);
 
     var request = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
     var transformedRequest = transform.transformRequest(request);
