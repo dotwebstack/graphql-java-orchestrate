@@ -9,7 +9,6 @@ import lombok.NonNull;
 @Builder(builderMethodName = "newResult", toBuilder = true)
 public final class Result {
 
-  @NonNull
   private final Object data;
 
   public Result transform(@NonNull Function<ResultBuilder, Result> transformer) {
