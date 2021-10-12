@@ -24,6 +24,7 @@ public class Subschema {
 
   private final Executor executor;
 
+  @Builder.Default
   private final List<Transform> transforms = List.of();
 
   public CompletableFuture<ExecutionResult> execute(ExecutionInput input) {
