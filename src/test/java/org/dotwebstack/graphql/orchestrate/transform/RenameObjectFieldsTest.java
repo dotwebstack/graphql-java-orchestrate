@@ -19,17 +19,16 @@ class RenameObjectFieldsTest {
 
   private GraphQLSchema originalSchema;
 
-  private RenameObjectFields transform;
-
   @BeforeEach
   void setUp() {
     originalSchema = loadSchema("dbeerpedia");
-    transform = new RenameObjectFields(
-        (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
   }
 
   @Test
   void transformSchema_RenamesField_UsingRenamer() {
+    var transform = new RenameObjectFields(
+        (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
+
     var transformedSchema = transform.transformSchema(originalSchema);
 
     assertThat(fieldType(transformedSchema, "Brewery", "label"), is(fieldType(originalSchema, "Brewery", "name")));
@@ -41,7 +40,24 @@ class RenameObjectFieldsTest {
   }
 
   @Test
+  void transformRequest_AddsAlias_ForRootField() {
+    var transform = new RenameObjectFields(
+        (typeName, fieldName, fieldDefinition) -> fieldName.equals("brewery") ? "company" : fieldName);
+
+    transform.transformSchema(originalSchema);
+
+    var request = parseQuery("{company(identifier:\"foo\") {identifier name}}");
+    var transformedRequest = transform.transformRequest(request);
+
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{company:brewery(identifier:\"foo\") {identifier name}}"));
+  }
+
+  @Test
   void transformRequest_AddsAlias_ForRegularFields() {
+    var transform = new RenameObjectFields(
+        (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
+
     transform.transformSchema(originalSchema);
 
     var request = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
@@ -53,6 +69,9 @@ class RenameObjectFieldsTest {
 
   @Test
   void transformRequest_AddsAlias_ForInlineFragmentFields() {
+    var transform = new RenameObjectFields(
+        (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
+
     transform.transformSchema(originalSchema);
 
     var request = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
