@@ -9,9 +9,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import lombok.NonNull;
 
-public class ValueUtil {
+public class ValueUtils {
 
-  private ValueUtil() {}
+  private ValueUtils() {}
 
   public static ScalarValue<?> scalarValueFrom(@NonNull Object input) {
     if (input instanceof String) {

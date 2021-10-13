@@ -1,10 +1,10 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
-import static org.dotwebstack.graphql.orchestrate.test.TestUtil.fieldArguments;
-import static org.dotwebstack.graphql.orchestrate.test.TestUtil.fieldDefinition;
-import static org.dotwebstack.graphql.orchestrate.test.TestUtil.fieldType;
-import static org.dotwebstack.graphql.orchestrate.test.TestUtil.loadSchema;
-import static org.dotwebstack.graphql.orchestrate.test.TestUtil.parseQuery;
+import static org.dotwebstack.graphql.orchestrate.test.TestUtils.fieldArguments;
+import static org.dotwebstack.graphql.orchestrate.test.TestUtils.fieldDefinition;
+import static org.dotwebstack.graphql.orchestrate.test.TestUtils.fieldType;
+import static org.dotwebstack.graphql.orchestrate.test.TestUtils.loadSchema;
+import static org.dotwebstack.graphql.orchestrate.test.TestUtils.parseQuery;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;

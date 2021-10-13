@@ -3,7 +3,8 @@ package org.dotwebstack.graphql.orchestrate.delegate;
 import static graphql.language.Field.newField;
 import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasStringArgument;
 import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasZeroArguments;
-import static org.dotwebstack.graphql.orchestrate.util.ValueUtil.scalarValueFrom;
+import static org.dotwebstack.graphql.orchestrate.test.TestUtils.extractQueryField;
+import static org.dotwebstack.graphql.orchestrate.util.ValueUtils.scalarValueFrom;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.when;
@@ -16,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
-import org.dotwebstack.graphql.orchestrate.test.TestUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class SimpleDelegationTest {
+class SimpleDelegatorTest {
 
   @Mock
   private Subschema subschema;
@@ -44,7 +44,7 @@ class SimpleDelegationTest {
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
 
-    var queryField = TestUtil.extractQueryField(queryCaptor.getValue());
+    var queryField = extractQueryField(queryCaptor.getValue());
     assertThat(queryField, hasZeroArguments());
   }
 
@@ -62,7 +62,7 @@ class SimpleDelegationTest {
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
 
-    var queryField = TestUtil.extractQueryField(queryCaptor.getValue());
+    var queryField = extractQueryField(queryCaptor.getValue());
     assertThat(queryField, hasStringArgument("arg1", "val1"));
   }
 

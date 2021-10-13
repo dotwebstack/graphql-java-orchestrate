@@ -1,20 +1,15 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
-import graphql.analysis.QueryTransformer;
-import graphql.analysis.QueryVisitorFieldEnvironment;
-import graphql.analysis.QueryVisitorStub;
+import static graphql.util.TreeTransformerUtil.changeNode;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapRequest;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapSchema;
+
 import graphql.language.Field;
-import graphql.language.SelectionSet;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLFieldsContainer;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLSchemaElement;
-import graphql.schema.GraphQLTypeVisitorStub;
-import graphql.schema.SchemaTransformer;
 import graphql.util.TraversalControl;
-import graphql.util.TraverserContext;
-import graphql.util.TreeTransformerUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -36,50 +31,33 @@ public class RenameObjectFields implements Transform {
 
   @Override
   public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
-    var typeVisitor = new GraphQLTypeVisitorStub() {
-      @Override
-      public TraversalControl visitGraphQLObjectType(GraphQLObjectType objectType,
-          TraverserContext<GraphQLSchemaElement> context) {
-        var fieldDefinitions = objectType.getFieldDefinitions()
-            .stream()
-            .map(fieldDefinition -> transformField(objectType, fieldDefinition))
-            .collect(Collectors.toList());
+    transformedSchema = mapSchema(originalSchema, SchemaMapping.newSchemaMapping()
+        .objectType((objectType, context) -> {
+          var fieldDefinitions = objectType.getFieldDefinitions()
+              .stream()
+              .map(fieldDefinition -> transformField(objectType, fieldDefinition))
+              .collect(Collectors.toList());
 
-        return changeNode(context, objectType.transform(builder -> builder.replaceFields(fieldDefinitions)));
-      }
-    };
-
-    transformedSchema = SchemaTransformer.transformSchema(originalSchema, typeVisitor);
+          return changeNode(context, objectType.transform(builder -> builder.replaceFields(fieldDefinitions)));
+        })
+        .build());
 
     return transformedSchema;
   }
 
   @Override
   public Request transformRequest(@NonNull Request request) {
-    var queryTransformer = QueryTransformer.newQueryTransformer()
-        .schema(transformedSchema)
-        .root(request.getSelectionSet())
-        .rootParentType(transformedSchema.getQueryType())
-        .fragmentsByName(Map.of())
-        .variables(Map.of())
-        .build();
+    return mapRequest(request, transformedSchema, RequestMapping.newRequestMapping()
+        .field(environment -> {
+          var field = environment.getField();
+          var fieldsContainer = environment.getFieldsContainer();
 
-    var queryVisitor = new QueryVisitorStub() {
-      @Override
-      public TraversalControl visitFieldWithControl(QueryVisitorFieldEnvironment environment) {
-        var field = environment.getField();
-
-        return findMappedName(environment.getFieldsContainer(), field)
-            .map(fieldName -> TreeTransformerUtil.changeNode(environment.getTraverserContext(),
-                field.transform(builder -> builder.name(fieldName)
-                    .alias(field.getName()))))
-            .orElse(TraversalControl.CONTINUE);
-      }
-    };
-
-    var newSelectionSet = (SelectionSet) queryTransformer.transform(queryVisitor);
-
-    return request.transform(builder -> builder.selectionSet(newSelectionSet)
+          return findMappedName(fieldsContainer, field)
+              .map(fieldName -> changeNode(environment.getTraverserContext(),
+                  field.transform(builder -> builder.name(fieldName)
+                      .alias(field.getName()))))
+              .orElse(TraversalControl.CONTINUE);
+        })
         .build());
   }
 

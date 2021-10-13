@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Optional;
 import org.dotwebstack.graphql.orchestrate.Request;
 
-public class TestUtil {
+public class TestUtils {
 
-  private TestUtil() {}
+  private TestUtils() {}
 
   public static Request parseQuery(String query) {
     var selectionSet = Parser.parse(query)

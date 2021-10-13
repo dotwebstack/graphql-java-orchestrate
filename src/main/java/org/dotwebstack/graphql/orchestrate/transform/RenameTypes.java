@@ -1,23 +1,17 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
-import graphql.analysis.QueryTransformer;
-import graphql.analysis.QueryVisitorFieldEnvironment;
-import graphql.analysis.QueryVisitorStub;
+import static graphql.util.TreeTransformerUtil.changeNode;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapRequest;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapSchema;
+
 import graphql.language.InlineFragment;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
 import graphql.language.TypeName;
 import graphql.schema.GraphQLFieldsContainer;
-import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLNamedType;
-import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
-import graphql.schema.GraphQLSchemaElement;
-import graphql.schema.GraphQLTypeVisitorStub;
-import graphql.schema.SchemaTransformer;
 import graphql.util.TraversalControl;
-import graphql.util.TraverserContext;
-import graphql.util.TreeTransformerUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,56 +34,31 @@ public class RenameTypes implements Transform {
   public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
     this.originalSchema = originalSchema;
 
-    var typeVisitor = new GraphQLTypeVisitorStub() {
-      @Override
-      public TraversalControl visitGraphQLInterfaceType(GraphQLInterfaceType type,
-          TraverserContext<GraphQLSchemaElement> context) {
-        return changeNode(context, type.transform(builder -> builder.name(renameType(type))));
-      }
-
-      @Override
-      public TraversalControl visitGraphQLObjectType(GraphQLObjectType type,
-          TraverserContext<GraphQLSchemaElement> context) {
-        return changeNode(context, type.transform(builder -> builder.name(renameType(type))));
-      }
-    };
-
-    return SchemaTransformer.transformSchema(originalSchema, typeVisitor);
+    return mapSchema(originalSchema, SchemaMapping.newSchemaMapping()
+        .objectType((objectType, context) -> changeNode(context,
+            objectType.transform(builder -> builder.name(renameType(objectType)))))
+        .interfaceType((interfaceType, context) -> changeNode(context,
+            interfaceType.transform(builder -> builder.name(renameType(interfaceType)))))
+        .build());
   }
 
   @Override
-  public Request transformRequest(@NonNull Request request) {
-    var queryTransformer = QueryTransformer.newQueryTransformer()
-        .schema(originalSchema)
-        .root(request.getSelectionSet())
-        .rootParentType(originalSchema.getQueryType())
-        .fragmentsByName(Map.of())
-        .variables(Map.of())
-        .build();
+  public Request transformRequest(Request originalRequest) {
+    return mapRequest(originalRequest, originalSchema, RequestMapping.newRequestMapping()
+        .field(environment -> {
+          var field = environment.getField();
+          var fieldType = environment.getFieldDefinition()
+              .getType();
 
-    var queryVisitor = new QueryVisitorStub() {
+          if (fieldType instanceof GraphQLFieldsContainer) {
+            var newSelectionSet = transformSelectionSet(field.getSelectionSet());
 
-      @Override
-      public TraversalControl visitFieldWithControl(QueryVisitorFieldEnvironment environment) {
-        var field = environment.getField();
-        var fieldType = environment.getFieldDefinition()
-            .getType();
+            return changeNode(environment.getTraverserContext(),
+                field.transform(builder -> builder.selectionSet(newSelectionSet)));
+          }
 
-        if (fieldType instanceof GraphQLFieldsContainer) {
-          var newSelectionSet =
-              transformSelectionSet(field.getSelectionSet(), ((GraphQLFieldsContainer) fieldType).getName());
-
-          return TreeTransformerUtil.changeNode(environment.getTraverserContext(),
-              field.transform(builder -> builder.selectionSet(newSelectionSet)));
-        }
-
-        return TraversalControl.CONTINUE;
-      }
-    };
-
-    var newSelectionSet = (SelectionSet) queryTransformer.transform(queryVisitor);
-
-    return request.transform(builder -> builder.selectionSet(newSelectionSet)
+          return TraversalControl.CONTINUE;
+        })
         .build());
   }
 
@@ -105,7 +74,7 @@ public class RenameTypes implements Transform {
     return newName;
   }
 
-  private SelectionSet transformSelectionSet(SelectionSet selectionSet, String typeName) {
+  private SelectionSet transformSelectionSet(SelectionSet selectionSet) {
     var newSelections = selectionSet.getSelections()
         .stream()
         .map(this::transformSelection)
