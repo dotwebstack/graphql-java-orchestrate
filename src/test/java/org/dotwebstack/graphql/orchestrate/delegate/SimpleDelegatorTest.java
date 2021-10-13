@@ -4,7 +4,6 @@ import static graphql.language.Field.newField;
 import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasStringArgument;
 import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasZeroArguments;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.extractQueryField;
-import static org.dotwebstack.graphql.orchestrate.util.ValueUtils.scalarValueFrom;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.when;
@@ -12,6 +11,7 @@ import static org.mockito.Mockito.when;
 import graphql.ExecutionInput;
 import graphql.ExecutionResultImpl;
 import graphql.language.Argument;
+import graphql.language.StringValue;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 import java.util.Map;
@@ -53,8 +53,8 @@ class SimpleDelegatorTest {
     when(environment.getSource()).thenReturn(Map.of("key1", "val1"));
 
     ArgsFromEnvFunction argsFromEnv = env -> {
-      Map<String, Object> source = env.getSource();
-      return List.of(new Argument("arg1", scalarValueFrom(source.get("key1"))));
+      Map<String, String> source = env.getSource();
+      return List.of(new Argument("arg1", StringValue.of(source.get("key1"))));
     };
 
     var result = buildDelegator("foo", "bar", argsFromEnv).delegate(environment);
