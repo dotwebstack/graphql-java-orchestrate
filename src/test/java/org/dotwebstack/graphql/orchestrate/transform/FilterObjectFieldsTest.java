@@ -35,6 +35,6 @@ class FilterObjectFieldsTest {
   void transformSchema_throwsException_whenPredicateMatchesAllFields() {
     var transform = new FilterObjectFields((typeName, fieldName, fieldDefinition) -> !typeName.equals("Brewery"));
 
-    Assertions.assertThrows(IllegalStateException.class, () -> transform.transformSchema(originalSchema));
+    Assertions.assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
   }
 }

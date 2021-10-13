@@ -9,8 +9,6 @@ import graphql.ExecutionInput;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -32,9 +30,6 @@ class RemoteExecutorTest {
 
   @BeforeAll
   static void beforeAll() throws IOException {
-    Logger.getLogger(MockWebServer.class.getName())
-        .setLevel(Level.WARNING);
-
     mockWebServer = new MockWebServer();
     mockWebServer.start();
 
