@@ -37,7 +37,7 @@ class SimpleDelegatorTest {
   private ArgumentCaptor<ExecutionInput> queryCaptor;
 
   @Test
-  void delegate_DelegatesQueryWithoutArgs_WhenNoArgsGiven() throws Exception {
+  void delegate_delegatesQueryWithoutArgs_whenNoArgsGiven() throws Exception {
     var delegator = buildDelegator("foo", "bar", null);
     var result = delegator.delegate(environment);
 
@@ -49,7 +49,7 @@ class SimpleDelegatorTest {
   }
 
   @Test
-  void delegate_DelegatesQueryWithArgs_WhenArgsGiven() throws Exception {
+  void delegate_delegatesQueryWithArgs_whenArgsGiven() throws Exception {
     when(environment.getSource()).thenReturn(Map.of("key1", "val1"));
 
     ArgsFromEnvFunction argsFromEnv = env -> {

@@ -25,7 +25,7 @@ class RenameObjectFieldsTest {
   }
 
   @Test
-  void transformSchema_RenamesField_UsingRenamer() {
+  void transformSchema_renamesField_UsingRenamer() {
     var transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
 
@@ -40,7 +40,7 @@ class RenameObjectFieldsTest {
   }
 
   @Test
-  void transformRequest_AddsAlias_ForRootField() {
+  void transformRequest_addsAlias_ForRootField() {
     var transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("brewery") ? "company" : fieldName);
 
@@ -54,7 +54,7 @@ class RenameObjectFieldsTest {
   }
 
   @Test
-  void transformRequest_AddsAlias_ForRegularFields() {
+  void transformRequest_addsAlias_ForNestedField() {
     var transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
 
@@ -68,7 +68,7 @@ class RenameObjectFieldsTest {
   }
 
   @Test
-  void transformRequest_AddsAlias_ForInlineFragmentFields() {
+  void transformRequest_addsAlias_ForInlineFragmentField() {
     var transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
 

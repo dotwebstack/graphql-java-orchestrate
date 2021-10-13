@@ -7,7 +7,6 @@ import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
@@ -15,7 +14,6 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Builder
-@Getter
 public class RemoteExecutor implements Executor {
 
   @NonNull
