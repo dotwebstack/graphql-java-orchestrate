@@ -11,14 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 
 @Builder
-@Getter
 public class SimpleDelegator implements Delegator {
 
   @NonNull
