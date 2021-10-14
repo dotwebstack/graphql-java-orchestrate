@@ -8,11 +8,8 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import graphql.language.AstPrinter;
-import graphql.language.Field;
-import graphql.language.SelectionSet;
 import graphql.schema.GraphQLSchema;
 import java.util.List;
-import org.dotwebstack.graphql.orchestrate.Request;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -76,8 +73,20 @@ class HoistFieldsTest {
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founderName}}");
     var transformedRequest = transform.transformRequest(originalRequest);
 
-    var foo = AstPrinter.printAstCompact(transformedRequest.getSelectionSet());
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier founder {name}}}"));
+  }
 
-    return;
+  @Test
+  void transformRequest_mergesSelectionSet_ifSelectionsOverlap() {
+    var transform = new HoistFields("Brewery", "founderName", List.of("founder", "name"));
+
+    transform.transformSchema(originalSchema);
+
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founder {identifier} founderName}}");
+    var transformedRequest = transform.transformRequest(originalRequest);
+
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier founder {identifier name}}}"));
   }
 }
