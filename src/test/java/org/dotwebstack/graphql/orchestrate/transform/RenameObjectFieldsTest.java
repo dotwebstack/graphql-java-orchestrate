@@ -12,15 +12,15 @@ import static org.hamcrest.Matchers.nullValue;
 
 import graphql.language.AstPrinter;
 import graphql.schema.GraphQLSchema;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class RenameObjectFieldsTest {
 
-  private GraphQLSchema originalSchema;
+  private static GraphQLSchema originalSchema;
 
-  @BeforeEach
-  void setUp() {
+  @BeforeAll
+  static void beforeAll() {
     originalSchema = loadSchema("dbeerpedia");
   }
 
@@ -46,8 +46,8 @@ class RenameObjectFieldsTest {
 
     transform.transformSchema(originalSchema);
 
-    var request = parseQuery("{company(identifier:\"foo\") {identifier name}}");
-    var transformedRequest = transform.transformRequest(request);
+    var originalRequest = parseQuery("{company(identifier:\"foo\") {identifier name}}");
+    var transformedRequest = transform.transformRequest(originalRequest);
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{company:brewery(identifier:\"foo\") {identifier name}}"));
@@ -60,8 +60,8 @@ class RenameObjectFieldsTest {
 
     transform.transformSchema(originalSchema);
 
-    var request = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
-    var transformedRequest = transform.transformRequest(request);
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
+    var transformedRequest = transform.transformRequest(originalRequest);
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier label:name}}"));
@@ -74,8 +74,8 @@ class RenameObjectFieldsTest {
 
     transform.transformSchema(originalSchema);
 
-    var request = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
-    var transformedRequest = transform.transformRequest(request);
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
+    var transformedRequest = transform.transformRequest(originalRequest);
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier ... on Brewery {label:name}}}"));

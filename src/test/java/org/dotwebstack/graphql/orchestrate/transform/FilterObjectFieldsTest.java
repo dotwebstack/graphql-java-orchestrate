@@ -7,15 +7,15 @@ import static org.hamcrest.Matchers.nullValue;
 
 import graphql.schema.GraphQLSchema;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class FilterObjectFieldsTest {
 
-  private GraphQLSchema originalSchema;
+  private static GraphQLSchema originalSchema;
 
-  @BeforeEach
-  void setUp() {
+  @BeforeAll
+  static void beforeAll() {
     originalSchema = loadSchema("dbeerpedia");
   }
 

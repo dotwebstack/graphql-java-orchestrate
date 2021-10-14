@@ -5,6 +5,7 @@ import static graphql.schema.SchemaTransformer.transformSchema;
 
 import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.analysis.QueryVisitorStub;
+import graphql.language.Field;
 import graphql.language.SelectionSet;
 import graphql.schema.GraphQLInterfaceType;
 import graphql.schema.GraphQLObjectType;
@@ -60,5 +61,11 @@ class TransformUtils {
 
     return request.transform(builder -> builder.selectionSet(newSelectionSet)
         .build());
+  }
+
+  public static boolean containsField(SelectionSet selectionSet, String fieldName) {
+    return selectionSet.getSelectionsOfType(Field.class)
+        .stream()
+        .anyMatch(field -> fieldName.equals(field.getName()));
   }
 }
