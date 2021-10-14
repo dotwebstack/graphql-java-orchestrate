@@ -10,14 +10,17 @@ import graphql.util.TraverserContext;
 import java.util.function.BiFunction;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 
 @Getter
 @Builder(builderMethodName = "newSchemaMapping")
 public class SchemaMapping {
 
+  @NonNull
   @Builder.Default
   private final SchemaMappingFunction<GraphQLObjectType> objectType = (element, context) -> CONTINUE;
 
+  @NonNull
   @Builder.Default
   private final SchemaMappingFunction<GraphQLInterfaceType> interfaceType = (element, context) -> CONTINUE;
 

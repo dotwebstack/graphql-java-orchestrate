@@ -1,20 +1,21 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
 import graphql.schema.GraphQLSchema;
+import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 
 public interface Transform {
 
-  default GraphQLSchema transformSchema(GraphQLSchema originalSchema) {
+  default GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
     return originalSchema;
   }
 
-  default Request transformRequest(Request originalRequest) {
+  default Request transformRequest(@NonNull Request originalRequest) {
     return originalRequest;
   }
 
-  default Result transformResult(Result originalResult) {
+  default Result transformResult(@NonNull Result originalResult) {
     return originalResult;
   }
 }

@@ -15,7 +15,9 @@ import graphql.schema.GraphQLTypeUtil;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
+import org.dotwebstack.graphql.orchestrate.Result;
 
 public class HoistField implements Transform {
 
@@ -38,7 +40,7 @@ public class HoistField implements Transform {
   }
 
   @Override
-  public GraphQLSchema transformSchema(GraphQLSchema originalSchema) {
+  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
     if (originalSchema.getObjectType(typeName) == null) {
       throw new TransformException(String.format("Object type '%s' not found.", typeName));
     }
@@ -62,7 +64,7 @@ public class HoistField implements Transform {
   }
 
   @Override
-  public Request transformRequest(Request originalRequest) {
+  public Request transformRequest(@NonNull Request originalRequest) {
     var mapping = RequestMapping.newRequestMapping()
         .field(environment -> {
           var fieldsContainer = environment.getFieldsContainer();
@@ -81,6 +83,11 @@ public class HoistField implements Transform {
         .build();
 
     return mapRequest(originalRequest, transformedSchema, mapping);
+  }
+
+  @Override
+  public Result transformResult(@NonNull Result originalResult) {
+    return Transform.super.transformResult(originalResult);
   }
 
   private GraphQLFieldDefinition findSourceField(GraphQLObjectType objectType, List<String> fieldPath) {

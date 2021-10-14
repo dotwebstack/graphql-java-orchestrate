@@ -18,6 +18,7 @@ import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
@@ -77,7 +78,7 @@ class SimpleDelegatorTest {
   void delegate_appliesRequestTransforms_whenGiven() throws Exception {
     when(subschema.getTransforms()).thenReturn(List.of(new Transform() {
       @Override
-      public Request transformRequest(Request originalRequest) {
+      public Request transformRequest(@NonNull Request originalRequest) {
         return originalRequest.transform(builder -> builder.selectionSet(new SelectionSet(List.of(new Field("baz"))))
             .build());
       }
@@ -98,7 +99,7 @@ class SimpleDelegatorTest {
   void delegate_appliesResponseTransforms_whenGiven() throws Exception {
     when(subschema.getTransforms()).thenReturn(List.of(new Transform() {
       @Override
-      public Result transformResult(Result originalResult) {
+      public Result transformResult(@NonNull Result originalResult) {
         return originalResult.transform(builder -> builder.data("baz")
             .build());
       }

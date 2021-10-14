@@ -43,7 +43,7 @@ public class RenameTypes implements Transform {
   }
 
   @Override
-  public Request transformRequest(Request originalRequest) {
+  public Request transformRequest(@NonNull Request originalRequest) {
     return mapRequest(originalRequest, originalSchema, RequestMapping.newRequestMapping()
         .field(environment -> {
           var field = environment.getField();

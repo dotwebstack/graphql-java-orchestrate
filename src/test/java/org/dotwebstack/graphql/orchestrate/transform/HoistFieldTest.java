@@ -10,6 +10,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import graphql.language.AstPrinter;
 import graphql.schema.GraphQLSchema;
 import java.util.List;
+import java.util.Map;
+import org.dotwebstack.graphql.orchestrate.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -88,5 +90,18 @@ class HoistFieldTest {
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier founder {identifier name}}}"));
+  }
+
+  @Test
+  void transformResult_dehoistsField_forSuccessResult() {
+    var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
+
+    transform.transformSchema(originalSchema);
+
+    var originalResult = Result.newResult()
+        .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("name", "bar"))))
+        .build();
+
+    var transformedResult = transform.transformResult(originalResult);
   }
 }

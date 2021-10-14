@@ -15,6 +15,7 @@ import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
+import org.dotwebstack.graphql.orchestrate.transform.TransformContext;
 
 @Builder
 public class SimpleDelegator implements Delegator {
@@ -39,13 +40,13 @@ public class SimpleDelegator implements Delegator {
         .build();
 
     // Apply request transforms in reverse order
-    for (var transform : Lists.reverse(subschema.getTransforms())) {
-      request = transform.transformRequest(request);
-    }
+    var transformedRequest = Lists.reverse(subschema.getTransforms())
+        .stream()
+        .reduce(request, (acc, transform) -> transform.transformRequest(acc), Request::merge);
 
     var operationDefinition = OperationDefinition.newOperationDefinition()
         .operation(OperationDefinition.Operation.QUERY)
-        .selectionSet(request.getSelectionSet())
+        .selectionSet(transformedRequest.getSelectionSet())
         .build();
 
     var executionInput = ExecutionInput.newExecutionInput()
@@ -53,14 +54,15 @@ public class SimpleDelegator implements Delegator {
         .build();
 
     return subschema.execute(executionInput)
-        .thenApply(this::processResult);
+        .thenApply(executionResult -> processResult(executionResult, transformedRequest.getContext()));
   }
 
-  private Object processResult(ExecutionResult executionResult) {
+  private Object processResult(ExecutionResult executionResult, TransformContext context) {
     Map<String, Object> resultData = executionResult.getData();
 
     var result = Result.newResult()
         .data(resultData.get(fieldName))
+        .context(context)
         .build();
 
     for (var transform : subschema.getTransforms()) {
