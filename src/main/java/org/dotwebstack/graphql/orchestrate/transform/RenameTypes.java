@@ -14,11 +14,14 @@ import graphql.schema.GraphQLSchema;
 import graphql.util.TraversalControl;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
+import org.dotwebstack.graphql.orchestrate.Result;
 
-public class RenameTypes implements Transform {
+public class RenameTypes extends AbstractTransform {
 
   private final TypeRenamer renamer;
 
@@ -43,7 +46,13 @@ public class RenameTypes implements Transform {
   }
 
   @Override
-  public Request transformRequest(@NonNull Request originalRequest) {
+  public CompletableFuture<Result> transform(@NonNull Request originalRequest,
+      @NonNull Function<Request, CompletableFuture<Result>> next) {
+    var transformedRequest = transformRequest(originalRequest);
+    return next.apply(transformedRequest);
+  }
+
+  private Request transformRequest(@NonNull Request originalRequest) {
     return mapRequest(originalRequest, originalSchema, RequestMapping.newRequestMapping()
         .field(environment -> {
           var field = environment.getField();

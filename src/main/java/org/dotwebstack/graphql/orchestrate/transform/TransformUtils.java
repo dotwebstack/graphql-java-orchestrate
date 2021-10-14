@@ -67,6 +67,11 @@ class TransformUtils {
         .build());
   }
 
+  public static <T> List<T> listAppend(List<T> list, T element) {
+    return Stream.concat(list.stream(), Stream.of(element))
+        .collect(Collectors.toList());
+  }
+
   public static boolean isField(Selection<?> selection, String fieldName) {
     return selection instanceof Field && fieldName.equals(((Field) selection).getName());
   }
@@ -123,8 +128,13 @@ class TransformUtils {
     return selectionSet.transform(builder -> builder.selections(selections));
   }
 
-  public static <T> List<T> listAppend(List<T> list, T element) {
-    return Stream.concat(list.stream(), Stream.of(element))
-        .collect(Collectors.toList());
-  }
+//  public static List<Field> getResultPath(TraverserContext<Node> context, Field field) {
+//    var parentFields = context.getParentNodes()
+//        .stream()
+//        .filter(Field.class::isInstance)
+//        .map(Field.class::cast)
+//        .collect(Collectors.toList());
+//
+//    return listAppend(parentFields, field);
+//  }
 }

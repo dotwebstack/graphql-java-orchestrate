@@ -11,11 +11,27 @@ import graphql.language.AstPrinter;
 import graphql.schema.GraphQLSchema;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class HoistFieldTest {
+
+  @Mock
+  private Function<Request, CompletableFuture<Result>> nextMock;
+
+  @Captor
+  private ArgumentCaptor<Request> requestCaptor;
 
   private GraphQLSchema originalSchema;
 
@@ -73,7 +89,13 @@ class HoistFieldTest {
     transform.transformSchema(originalSchema);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founderName}}");
-    var transformedRequest = transform.transformRequest(originalRequest);
+
+    Mockito.when(nextMock.apply(requestCaptor.capture()))
+        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
+            .build()));
+
+    transform.transform(originalRequest, nextMock);
+    var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier founder {name}}}"));
@@ -86,22 +108,18 @@ class HoistFieldTest {
     transform.transformSchema(originalSchema);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founder {identifier} founderName}}");
-    var transformedRequest = transform.transformRequest(originalRequest);
-
-    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier founder {identifier name}}}"));
-  }
-
-  @Test
-  void transformResult_dehoistsField_forSuccessResult() {
-    var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
-
-    transform.transformSchema(originalSchema);
 
     var originalResult = Result.newResult()
         .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("name", "bar"))))
         .build();
 
-    var transformedResult = transform.transformResult(originalResult);
+    Mockito.when(nextMock.apply(requestCaptor.capture()))
+        .thenReturn(CompletableFuture.completedFuture(originalResult));
+
+    transform.transform(originalRequest, nextMock);
+    var transformedRequest = requestCaptor.getValue();
+
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier founder {identifier name}}}"));
   }
 }

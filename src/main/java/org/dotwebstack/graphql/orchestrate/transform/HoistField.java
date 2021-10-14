@@ -15,11 +15,15 @@ import graphql.schema.GraphQLTypeUtil;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 
-public class HoistField implements Transform {
+public class HoistField extends AbstractTransform {
+
+  public static final String HOISTED_FIELDS = "hoistedFields";
 
   private final String typeName;
 
@@ -64,7 +68,13 @@ public class HoistField implements Transform {
   }
 
   @Override
-  public Request transformRequest(@NonNull Request originalRequest) {
+  public CompletableFuture<Result> transform(@NonNull Request originalRequest,
+      @NonNull Function<Request, CompletableFuture<Result>> next) {
+    var transformedRequest = transformRequest(originalRequest);
+    return next.apply(transformedRequest);
+  }
+
+  private Request transformRequest(@NonNull Request originalRequest) {
     var mapping = RequestMapping.newRequestMapping()
         .field(environment -> {
           var fieldsContainer = environment.getFieldsContainer();
@@ -83,11 +93,6 @@ public class HoistField implements Transform {
         .build();
 
     return mapRequest(originalRequest, transformedSchema, mapping);
-  }
-
-  @Override
-  public Result transformResult(@NonNull Result originalResult) {
-    return Transform.super.transformResult(originalResult);
   }
 
   private GraphQLFieldDefinition findSourceField(GraphQLObjectType objectType, List<String> fieldPath) {

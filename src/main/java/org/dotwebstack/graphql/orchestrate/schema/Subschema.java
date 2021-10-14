@@ -4,7 +4,6 @@ import graphql.ExecutionInput;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,9 +23,7 @@ public class Subschema {
 
   private final Executor executor;
 
-  @NonNull
-  @Builder.Default
-  private final List<Transform> transforms = List.of();
+  private final Transform transform;
 
   public CompletableFuture<ExecutionResult> execute(ExecutionInput input) {
     LOG.debug("Executing query:\n{}", input.getQuery());

@@ -7,7 +7,7 @@ import graphql.schema.GraphQLSchema;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 
-public class FilterObjectFields implements Transform {
+public class FilterObjectFields extends AbstractTransform {
 
   private final ObjectFieldFilter filter;
 
