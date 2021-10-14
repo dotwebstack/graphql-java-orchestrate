@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import org.dotwebstack.graphql.orchestrate.Request;
 
-public class HoistFields implements Transform {
+public class HoistField implements Transform {
 
   private final String typeName;
 
@@ -27,7 +27,7 @@ public class HoistFields implements Transform {
 
   private GraphQLSchema transformedSchema;
 
-  public HoistFields(String typeName, String targetFieldName, List<String> sourceFieldPath) {
+  public HoistField(String typeName, String targetFieldName, List<String> sourceFieldPath) {
     if (sourceFieldPath.isEmpty()) {
       throw new IllegalArgumentException("Source field path must contain at least 1 segment.");
     }
