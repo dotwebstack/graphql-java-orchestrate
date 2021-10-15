@@ -110,9 +110,8 @@ public class HoistField extends AbstractTransform {
         })
         .build();
 
-    var result = next.apply(mapRequest(originalRequest, transformedSchema, mapping));
-
-    return result.thenApply(r -> dehoistFields(r, unmodifiableList(hoistedFields)));
+    return next.apply(mapRequest(originalRequest, transformedSchema, mapping))
+        .thenApply(result -> dehoistFields(result, unmodifiableList(hoistedFields)));
   }
 
   private boolean isFieldMatching(QueryVisitorFieldEnvironment environment) {
