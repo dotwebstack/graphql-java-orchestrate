@@ -1,14 +1,18 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
+import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.loadSchema;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.parseQuery;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import graphql.language.AstPrinter;
+import graphql.schema.GraphQLList;
+import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLSchema;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +71,32 @@ class HoistFieldTest {
     assertThat(targetField.getType(), equalTo(originalSchema.getObjectType("Person")
         .getFieldDefinition("name")
         .getType()));
+  }
+
+  @Test
+  void transformSchema_addsListField_IfPathContainsList() {
+    var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
+    var transformedSchema = transform.transformSchema(originalSchema);
+
+    var targetField = transformedSchema.getObjectType("Brewery")
+        .getFieldDefinition("ambassadorNames");
+
+    assertThat(targetField, notNullValue());
+    assertThat(targetField.getType(), instanceOf(GraphQLNonNull.class));
+
+    var listType = unwrapNonNull(targetField.getType());
+
+    assertThat(listType, instanceOf(GraphQLList.class));
+    assertThat(((GraphQLList) listType).getWrappedType(), equalTo(originalSchema.getObjectType("Person")
+        .getFieldDefinition("name")
+        .getType()));
+  }
+
+  @Test
+  void transformSchema_throwsException_IfPathContainsMultipleLists() {
+    var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies"));
+
+    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
   }
 
   @Test

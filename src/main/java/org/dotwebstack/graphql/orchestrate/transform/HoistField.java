@@ -3,6 +3,7 @@ package org.dotwebstack.graphql.orchestrate.transform;
 import static graphql.util.TraversalControl.CONTINUE;
 import static graphql.util.TreeTransformerUtil.changeNode;
 import static java.util.Collections.unmodifiableList;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.*;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.excludeField;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getFieldValue;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getResultPath;
@@ -13,7 +14,10 @@ import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapSc
 import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.language.SelectionSet;
 import graphql.schema.GraphQLFieldDefinition;
+import graphql.schema.GraphQLList;
+import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLObjectType;
+import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLTypeUtil;
 import graphql.util.TraversalControl;
@@ -37,6 +41,8 @@ public class HoistField extends AbstractTransform {
 
   private GraphQLSchema transformedSchema;
 
+  private boolean targetFieldList = false;
+
   public HoistField(String typeName, String targetFieldName, List<String> sourceFieldPath) {
     if (sourceFieldPath.isEmpty()) {
       throw new IllegalArgumentException("Source field path must contain at least 1 segment.");
@@ -59,8 +65,9 @@ public class HoistField extends AbstractTransform {
             return CONTINUE;
           }
 
-          var hoistedField =
-              findSourceField(objectType, sourceFieldPath).transform(builder -> builder.name(targetFieldName));
+          var sourceField = findSourceField(objectType, sourceFieldPath);
+          var hoistedField = sourceField.transform(builder -> builder.name(targetFieldName)
+              .type(wrapListType(sourceField.getType())));
 
           return changeNode(context, objectType.transform(builder -> builder.field(hoistedField)));
         })
@@ -71,12 +78,24 @@ public class HoistField extends AbstractTransform {
     return transformedSchema;
   }
 
+  private GraphQLOutputType wrapListType(GraphQLOutputType type) {
+    return targetFieldList ? GraphQLNonNull.nonNull(GraphQLList.list(type)) : type;
+  }
+
   private GraphQLFieldDefinition findSourceField(GraphQLObjectType objectType, List<String> fieldPath) {
     var fieldName = fieldPath.get(0);
     var fieldPathSize = fieldPath.size();
 
     var field = Optional.ofNullable(objectType.getFieldDefinition(fieldName))
         .orElseThrow(() -> new TransformException(String.format("Object field '%s' not found.", fieldName)));
+
+    if (GraphQLTypeUtil.unwrapNonNull(field.getType()) instanceof GraphQLList) {
+      if (targetFieldList) {
+        throw new TransformException("Source field path contains more than one list field.");
+      }
+
+      targetFieldList = true;
+    }
 
     if (fieldPathSize == 1) {
       return field;
@@ -142,7 +161,7 @@ public class HoistField extends AbstractTransform {
 
   private Object dehoistField(Object data, HoistedField hoistedField) {
     var fieldValue = getFieldValue(data, hoistedField.getSourcePath());
-    return TransformUtils.putFieldValue(data, hoistedField.getTargetPath(), fieldValue);
+    return putFieldValue(data, hoistedField.getTargetPath(), fieldValue);
   }
 
   @Getter
