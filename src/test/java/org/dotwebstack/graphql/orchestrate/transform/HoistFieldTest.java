@@ -53,8 +53,22 @@ class HoistFieldTest {
   }
 
   @Test
+  void constructor_throwsException_ForSourceFieldPathWithSingleField() {
+    var sourceFieldPath = List.of("name");
+
+    assertThrows(IllegalArgumentException.class, () -> new HoistField("Brewery", "breweryName", sourceFieldPath));
+  }
+
+  @Test
   void transformSchema_throwsException_ForInvalidTypeName() {
     var transform = new HoistField("Company", "founderName", List.of("founder", "name"));
+
+    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
+  }
+
+  @Test
+  void transformSchema_throwsException_ForInvalidFieldName() {
+    var transform = new HoistField("Brewery", "founderAge", List.of("founder", "age"));
 
     assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
   }

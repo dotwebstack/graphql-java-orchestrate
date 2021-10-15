@@ -44,8 +44,8 @@ public class HoistField extends AbstractTransform {
   private boolean targetFieldList = false;
 
   public HoistField(String typeName, String targetFieldName, List<String> sourceFieldPath) {
-    if (sourceFieldPath.isEmpty()) {
-      throw new IllegalArgumentException("Source field path must contain at least 1 segment.");
+    if (sourceFieldPath.size() <= 1) {
+      throw new IllegalArgumentException("Source field path must contain at least 2 fields.");
     }
 
     this.typeName = typeName;
