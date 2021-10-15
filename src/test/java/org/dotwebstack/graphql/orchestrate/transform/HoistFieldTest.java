@@ -4,6 +4,7 @@ import static org.dotwebstack.graphql.orchestrate.test.TestUtils.loadSchema;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.parseQuery;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -83,18 +84,28 @@ class HoistFieldTest {
   }
 
   @Test
-  void transformRequest_expandsSelectionSet_ifFieldRequested() {
+  @SuppressWarnings("unchecked")
+  void transformRequest_expandsSelectionSet_ifFieldRequested() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
     transform.transformSchema(originalSchema);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founderName}}");
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
-            .build()));
+    var proxyResult = Result.newResult()
+        .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("name", "bar"))))
+        .build();
 
-    transform.transform(originalRequest, nextMock);
+    Mockito.when(nextMock.apply(requestCaptor.capture()))
+        .thenReturn(CompletableFuture.completedFuture(proxyResult));
+
+    var result = transform.transform(originalRequest, nextMock)
+        .get();
+
+    Map<String, Object> resultData = result.getData();
+    assertThat(resultData.size(), is(1));
+    assertThat(((Map<String, Object>) resultData.get("brewery")).get("founderName"), equalTo("bar"));
+
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
@@ -102,21 +113,28 @@ class HoistFieldTest {
   }
 
   @Test
-  void transformRequest_mergesSelectionSet_ifSelectionsOverlap() {
+  @SuppressWarnings("unchecked")
+  void transformRequest_mergesSelectionSet_ifSelectionsOverlap() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
     transform.transformSchema(originalSchema);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founder {identifier} founderName}}");
 
-    var originalResult = Result.newResult()
-        .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("name", "bar"))))
+    var proxyResult = Result.newResult()
+        .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("identifier", "baz", "name", "bar"))))
         .build();
 
     Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(originalResult));
+        .thenReturn(CompletableFuture.completedFuture(proxyResult));
 
-    transform.transform(originalRequest, nextMock);
+    var result = transform.transform(originalRequest, nextMock)
+        .get();
+
+    Map<String, Object> resultData = result.getData();
+    assertThat(resultData.size(), is(1));
+    assertThat(((Map<String, Object>) resultData.get("brewery")).get("founderName"), equalTo("bar"));
+
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),

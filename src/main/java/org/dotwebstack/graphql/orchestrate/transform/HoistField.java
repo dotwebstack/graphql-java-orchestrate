@@ -2,28 +2,32 @@ package org.dotwebstack.graphql.orchestrate.transform;
 
 import static graphql.util.TraversalControl.CONTINUE;
 import static graphql.util.TreeTransformerUtil.changeNode;
+import static java.util.Collections.unmodifiableList;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.excludeField;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getFieldValue;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getResultPath;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.includeFieldPath;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapRequest;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapSchema;
 
+import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.language.SelectionSet;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLTypeUtil;
-import java.util.Collections;
+import graphql.util.TraversalControl;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import lombok.Getter;
 import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 
 public class HoistField extends AbstractTransform {
-
-  public static final String HOISTED_FIELDS = "hoistedFields";
 
   private final String typeName;
 
@@ -40,7 +44,7 @@ public class HoistField extends AbstractTransform {
 
     this.typeName = typeName;
     this.targetFieldName = targetFieldName;
-    this.sourceFieldPath = Collections.unmodifiableList(sourceFieldPath);
+    this.sourceFieldPath = unmodifiableList(sourceFieldPath);
   }
 
   @Override
@@ -67,34 +71,6 @@ public class HoistField extends AbstractTransform {
     return transformedSchema;
   }
 
-  @Override
-  public CompletableFuture<Result> transform(@NonNull Request originalRequest,
-      @NonNull Function<Request, CompletableFuture<Result>> next) {
-    var transformedRequest = transformRequest(originalRequest);
-    return next.apply(transformedRequest);
-  }
-
-  private Request transformRequest(@NonNull Request originalRequest) {
-    var mapping = RequestMapping.newRequestMapping()
-        .field(environment -> {
-          var fieldsContainer = environment.getFieldsContainer();
-          var fieldDefinition = environment.getFieldDefinition();
-
-          if (!typeName.equals(fieldsContainer.getName()) || !targetFieldName.equals(fieldDefinition.getName())) {
-            return CONTINUE;
-          }
-
-          var parentEnvironment = environment.getParentEnvironment();
-          var parentField = parentEnvironment.getField();
-
-          return changeNode(parentEnvironment.getTraverserContext(), parentField
-              .transform(builder -> builder.selectionSet(transformSelectionSet(parentField.getSelectionSet()))));
-        })
-        .build();
-
-    return mapRequest(originalRequest, transformedSchema, mapping);
-  }
-
   private GraphQLFieldDefinition findSourceField(GraphQLObjectType objectType, List<String> fieldPath) {
     var fieldName = fieldPath.get(0);
     var fieldPathSize = fieldPath.size();
@@ -115,7 +91,71 @@ public class HoistField extends AbstractTransform {
     return findSourceField((GraphQLObjectType) fieldType, fieldPath.subList(1, fieldPathSize));
   }
 
+  @Override
+  public CompletableFuture<Result> transform(@NonNull Request originalRequest,
+      @NonNull Function<Request, CompletableFuture<Result>> next) {
+    var hoistedFields = new ArrayList<HoistedField>();
+
+    var mapping = RequestMapping.newRequestMapping()
+        .field(environment -> {
+          if (!isFieldMatching(environment)) {
+            return CONTINUE;
+          }
+
+          // Keep track of all hoisted fields in the selection tree
+          hoistedFields.add(new HoistedField(getResultPath(environment.getTraverserContext(), sourceFieldPath),
+              getResultPath(environment.getTraverserContext(), environment.getField())));
+
+          return hoistField(environment);
+        })
+        .build();
+
+    var result = next.apply(mapRequest(originalRequest, transformedSchema, mapping));
+
+    return result.thenApply(r -> dehoistFields(r, unmodifiableList(hoistedFields)));
+  }
+
+  private boolean isFieldMatching(QueryVisitorFieldEnvironment environment) {
+    var fieldsContainer = environment.getFieldsContainer();
+    var fieldDefinition = environment.getFieldDefinition();
+
+    return typeName.equals(fieldsContainer.getName()) && targetFieldName.equals(fieldDefinition.getName());
+  }
+
+  private TraversalControl hoistField(QueryVisitorFieldEnvironment environment) {
+    var parentEnvironment = environment.getParentEnvironment();
+    var parentField = parentEnvironment.getField();
+
+    return changeNode(parentEnvironment.getTraverserContext(),
+        parentField.transform(builder -> builder.selectionSet(transformSelectionSet(parentField.getSelectionSet()))));
+  }
+
   private SelectionSet transformSelectionSet(SelectionSet selectionSet) {
     return includeFieldPath(excludeField(selectionSet, targetFieldName), sourceFieldPath);
+  }
+
+  private Result dehoistFields(Result result, List<HoistedField> hoistedFields) {
+    var data = hoistedFields.stream()
+        .reduce(result.getData(), this::dehoistField, TransformUtils::noopCombiner);
+
+    return result.transform(builder -> builder.data(data));
+  }
+
+  private Object dehoistField(Object data, HoistedField hoistedField) {
+    var fieldValue = getFieldValue(data, hoistedField.getSourcePath());
+    return TransformUtils.putFieldValue(data, hoistedField.getTargetPath(), fieldValue);
+  }
+
+  @Getter
+  private static class HoistedField {
+
+    private final List<String> sourcePath;
+
+    private final List<String> targetPath;
+
+    public HoistedField(List<String> sourcePath, List<String> targetPath) {
+      this.sourcePath = sourcePath;
+      this.targetPath = targetPath;
+    }
   }
 }

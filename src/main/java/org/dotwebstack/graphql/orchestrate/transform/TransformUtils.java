@@ -2,10 +2,12 @@ package org.dotwebstack.graphql.orchestrate.transform;
 
 import static graphql.analysis.QueryTransformer.newQueryTransformer;
 import static graphql.schema.SchemaTransformer.transformSchema;
+import static java.util.Collections.unmodifiableMap;
 
 import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.analysis.QueryVisitorStub;
 import graphql.language.Field;
+import graphql.language.Node;
 import graphql.language.Selection;
 import graphql.language.SelectionSet;
 import graphql.schema.GraphQLInterfaceType;
@@ -15,6 +17,7 @@ import graphql.schema.GraphQLSchemaElement;
 import graphql.schema.GraphQLTypeVisitorStub;
 import graphql.util.TraversalControl;
 import graphql.util.TraverserContext;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -69,6 +72,11 @@ class TransformUtils {
 
   public static <T> List<T> listAppend(List<T> list, T element) {
     return Stream.concat(list.stream(), Stream.of(element))
+        .collect(Collectors.toList());
+  }
+
+  public static <T> List<T> listMerge(List<T> list1, List<T> list2) {
+    return Stream.concat(list1.stream(), list2.stream())
         .collect(Collectors.toList());
   }
 
@@ -128,13 +136,88 @@ class TransformUtils {
     return selectionSet.transform(builder -> builder.selections(selections));
   }
 
-  // public static List<Field> getResultPath(TraverserContext<Node> context, Field field) {
-  // var parentFields = context.getParentNodes()
-  // .stream()
-  // .filter(Field.class::isInstance)
-  // .map(Field.class::cast)
-  // .collect(Collectors.toList());
-  //
-  // return listAppend(parentFields, field);
-  // }
+  @SuppressWarnings("rawtypes")
+  public static List<String> getResultPath(TraverserContext<Node> context, Field field) {
+    var parentFields = context.getParentNodes()
+        .stream()
+        .filter(Field.class::isInstance)
+        .map(Field.class::cast)
+        .map(Field::getResultKey)
+        .collect(Collectors.toList());
+
+    return listAppend(parentFields, field.getResultKey());
+  }
+
+  @SuppressWarnings("rawtypes")
+  public static List<String> getResultPath(TraverserContext<Node> context, List<String> fieldPath) {
+    var parentFields = context.getParentNodes()
+        .stream()
+        .filter(Field.class::isInstance)
+        .map(Field.class::cast)
+        .map(Field::getResultKey)
+        .collect(Collectors.toList());
+
+    return listMerge(parentFields, fieldPath);
+  }
+
+  public static Object getFieldValue(Object data, List<String> fieldPath) {
+    var fieldPathSize = fieldPath.size();
+    var fieldValue = getFieldValue(data, fieldPath.get(0));
+
+    // Field (or parent) is absent or target field has been reached
+    if (fieldValue == null || fieldPathSize == 1) {
+      return fieldValue;
+    }
+
+    return getFieldValue(fieldValue, fieldPath.subList(1, fieldPathSize));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Object getFieldValue(Object data, String fieldKey) {
+    if (data instanceof List) {
+      return (((List<Object>) data).stream()).map(item -> getFieldValue(item, fieldKey))
+          .collect(Collectors.toList());
+    }
+
+    if (data instanceof Map) {
+      return ((Map<String, Object>) data).get(fieldKey);
+    }
+
+    throw new TransformException("Unsupported field type.");
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Object putFieldValue(Object data, List<String> fieldPath, Object fieldValue) {
+    var fieldPathSize = fieldPath.size();
+
+    if (data instanceof List) {
+      return (((List<Object>) data).stream()).map(item -> putFieldValue(item, fieldPath, fieldValue))
+          .collect(Collectors.toList());
+    }
+
+    if (!(data instanceof Map)) {
+      throw new TransformException("Unsupported field type.");
+    }
+
+    var fieldKey = fieldPath.get(0);
+    var dataMap = ((Map<String, Object>) data);
+
+    if (fieldPathSize == 1) {
+      return putFieldValue(dataMap, fieldKey, fieldValue);
+    }
+
+    var nestedMap = dataMap.getOrDefault(fieldKey, Map.of());
+
+    return putFieldValue(dataMap, fieldKey, putFieldValue(nestedMap, fieldPath.subList(1, fieldPathSize), fieldValue));
+  }
+
+  public static Map<String, Object> putFieldValue(Map<String, Object> data, String fieldKey, Object fieldValue) {
+    var dataMap = new HashMap<>(data);
+    dataMap.put(fieldKey, fieldValue);
+    return unmodifiableMap(dataMap);
+  }
+
+  public static <T> T noopCombiner(T o1, T o2) {
+    throw new TransformException("Combining should never happen, since streams must be processed sequentially.");
+  }
 }
