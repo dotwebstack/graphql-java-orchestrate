@@ -3,13 +3,13 @@ package org.dotwebstack.graphql.orchestrate.transform;
 import static graphql.util.TraversalControl.CONTINUE;
 import static graphql.util.TreeTransformerUtil.changeNode;
 import static java.util.Collections.unmodifiableList;
-import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.*;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.excludeField;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getFieldValue;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getResultPath;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.includeFieldPath;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapRequest;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapSchema;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.putFieldValue;
 
 import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.language.SelectionSet;
