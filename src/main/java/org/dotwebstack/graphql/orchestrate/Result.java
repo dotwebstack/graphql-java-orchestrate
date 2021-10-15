@@ -1,6 +1,7 @@
 package org.dotwebstack.graphql.orchestrate;
 
-import java.util.function.Function;
+import java.util.Map;
+import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -9,9 +10,11 @@ import lombok.NonNull;
 @Builder(builderMethodName = "newResult", toBuilder = true)
 public final class Result {
 
-  private final Object data;
+  private final Map<String, Object> data;
 
-  public Result transform(@NonNull Function<ResultBuilder, Result> transformer) {
-    return transformer.apply(toBuilder());
+  public Result transform(@NonNull Consumer<ResultBuilder> builderConsumer) {
+    var builder = toBuilder();
+    builderConsumer.accept(builder);
+    return builder.build();
   }
 }

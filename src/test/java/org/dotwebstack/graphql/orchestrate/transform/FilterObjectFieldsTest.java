@@ -4,18 +4,18 @@ import static org.dotwebstack.graphql.orchestrate.test.TestUtils.loadSchema;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import graphql.schema.GraphQLSchema;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 class FilterObjectFieldsTest {
 
-  private GraphQLSchema originalSchema;
+  private static GraphQLSchema originalSchema;
 
-  @BeforeEach
-  void setUp() {
+  @BeforeAll
+  static void beforeAll() {
     originalSchema = loadSchema("dbeerpedia");
   }
 
@@ -35,6 +35,6 @@ class FilterObjectFieldsTest {
   void transformSchema_throwsException_whenPredicateMatchesAllFields() {
     var transform = new FilterObjectFields((typeName, fieldName, fieldDefinition) -> !typeName.equals("Brewery"));
 
-    Assertions.assertThrows(IllegalStateException.class, () -> transform.transformSchema(originalSchema));
+    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
   }
 }

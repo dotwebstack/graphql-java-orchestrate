@@ -13,11 +13,14 @@ import graphql.util.TraversalControl;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
+import org.dotwebstack.graphql.orchestrate.Result;
 
-public class RenameObjectFields implements Transform {
+public class RenameObjectFields extends AbstractTransform {
 
   private final ObjectFieldRenamer renamer;
 
@@ -46,8 +49,9 @@ public class RenameObjectFields implements Transform {
   }
 
   @Override
-  public Request transformRequest(@NonNull Request request) {
-    return mapRequest(request, transformedSchema, RequestMapping.newRequestMapping()
+  public CompletableFuture<Result> transform(@NonNull Request originalRequest,
+      @NonNull Function<Request, CompletableFuture<Result>> next) {
+    var transformedRequest = mapRequest(originalRequest, transformedSchema, RequestMapping.newRequestMapping()
         .field(environment -> {
           var field = environment.getField();
           var fieldsContainer = environment.getFieldsContainer();
@@ -59,6 +63,8 @@ public class RenameObjectFields implements Transform {
               .orElse(TraversalControl.CONTINUE);
         })
         .build());
+
+    return next.apply(transformedRequest);
   }
 
   private Optional<String> findMappedName(GraphQLFieldsContainer fieldsContainer, Field field) {

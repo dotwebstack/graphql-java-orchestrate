@@ -5,4 +5,12 @@ type Query {
 type Brewery {
   identifier: ID!
   name: String!
+  founder: Person!
+  ambassadors: [Person!]!
+}
+
+type Person {
+  identifier: ID!
+  name: String!
+  hobbies: [String!]!
 }

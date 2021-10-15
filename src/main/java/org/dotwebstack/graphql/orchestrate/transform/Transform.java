@@ -1,20 +1,16 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
 import graphql.schema.GraphQLSchema;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 
 public interface Transform {
 
-  default GraphQLSchema transformSchema(GraphQLSchema originalSchema) {
-    return originalSchema;
-  }
+  Transform pipe(Transform transform);
 
-  default Request transformRequest(Request originalRequest) {
-    return originalRequest;
-  }
+  GraphQLSchema transformSchema(GraphQLSchema originalSchema);
 
-  default Result transformResult(Result originalResult) {
-    return originalResult;
-  }
+  CompletableFuture<Result> transform(Request originalRequest, Function<Request, CompletableFuture<Result>> next);
 }

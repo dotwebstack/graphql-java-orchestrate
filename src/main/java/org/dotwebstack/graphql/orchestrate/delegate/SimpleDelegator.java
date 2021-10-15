@@ -2,13 +2,12 @@ package org.dotwebstack.graphql.orchestrate.delegate;
 
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
-import graphql.com.google.common.collect.Lists;
 import graphql.language.AstPrinter;
 import graphql.language.OperationDefinition;
 import graphql.language.SelectionSet;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.Builder;
 import lombok.NonNull;
@@ -34,15 +33,18 @@ public class SimpleDelegator implements Delegator {
         .transform(builder -> builder.name(fieldName)
             .arguments(argsFromEnv.apply(environment)));
 
-    var request = Request.newRequest()
+    var originalRequest = Request.newRequest()
         .selectionSet(new SelectionSet(List.of(rootField)))
         .build();
 
-    // Apply request transforms in reverse order
-    for (var transform : Lists.reverse(subschema.getTransforms())) {
-      request = transform.transformRequest(request);
-    }
+    return Optional.ofNullable(subschema.getTransform())
+        .map(transform -> transform.transform(originalRequest, this::delegateRequest))
+        .orElseGet(() -> this.delegateRequest(originalRequest))
+        .thenApply(result -> result.getData()
+            .get(fieldName));
+  }
 
+  private CompletableFuture<Result> delegateRequest(Request request) {
     var operationDefinition = OperationDefinition.newOperationDefinition()
         .operation(OperationDefinition.Operation.QUERY)
         .selectionSet(request.getSelectionSet())
@@ -53,20 +55,12 @@ public class SimpleDelegator implements Delegator {
         .build();
 
     return subschema.execute(executionInput)
-        .thenApply(this::processResult);
+        .thenApply(this::mapResult);
   }
 
-  private Object processResult(ExecutionResult executionResult) {
-    Map<String, Object> resultData = executionResult.getData();
-
-    var result = Result.newResult()
-        .data(resultData.get(fieldName))
+  private Result mapResult(ExecutionResult executionResult) {
+    return Result.newResult()
+        .data(executionResult.getData())
         .build();
-
-    for (var transform : subschema.getTransforms()) {
-      result = transform.transformResult(result);
-    }
-
-    return result.getData();
   }
 }

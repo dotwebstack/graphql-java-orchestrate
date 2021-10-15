@@ -27,9 +27,9 @@ public class SchemaWrapper {
     // Create new schema with fresh code registry
     var wrappedSchema = originalSchema.transform(builder -> builder.codeRegistry(codeRegistryBuilder.build()));
 
-    // Apply schema transforms
-    for (var transform : subschema.getTransforms()) {
-      wrappedSchema = transform.transformSchema(wrappedSchema);
+    if (subschema.getTransform() != null) {
+      wrappedSchema = subschema.getTransform()
+          .transformSchema(wrappedSchema);
     }
 
     return wrappedSchema;

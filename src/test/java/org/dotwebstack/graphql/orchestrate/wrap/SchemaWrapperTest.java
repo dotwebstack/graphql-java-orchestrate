@@ -45,9 +45,10 @@ class SchemaWrapperTest {
   @Test
   void wrap_appliesSchemaTransforms_onGivenSubschema() {
     var transform = new RenameTypes((typeName, typeDefinition) -> typeName.equals("Brewery") ? "Company" : typeName);
+
     var subschema = Subschema.builder()
         .schema(originalSchema)
-        .transforms(List.of(transform))
+        .transform(transform)
         .build();
 
     var wrappedSchema = SchemaWrapper.wrap(subschema);

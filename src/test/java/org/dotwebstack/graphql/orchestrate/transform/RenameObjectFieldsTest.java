@@ -12,15 +12,32 @@ import static org.hamcrest.Matchers.nullValue;
 
 import graphql.language.AstPrinter;
 import graphql.schema.GraphQLSchema;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import org.dotwebstack.graphql.orchestrate.Request;
+import org.dotwebstack.graphql.orchestrate.Result;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class RenameObjectFieldsTest {
 
-  private GraphQLSchema originalSchema;
+  @Mock
+  private Function<Request, CompletableFuture<Result>> nextMock;
 
-  @BeforeEach
-  void setUp() {
+  @Captor
+  private ArgumentCaptor<Request> requestCaptor;
+
+  private static GraphQLSchema originalSchema;
+
+  @BeforeAll
+  static void beforeAll() {
     originalSchema = loadSchema("dbeerpedia");
   }
 
@@ -46,8 +63,14 @@ class RenameObjectFieldsTest {
 
     transform.transformSchema(originalSchema);
 
-    var request = parseQuery("{company(identifier:\"foo\") {identifier name}}");
-    var transformedRequest = transform.transformRequest(request);
+    var originalRequest = parseQuery("{company(identifier:\"foo\") {identifier name}}");
+
+    Mockito.when(nextMock.apply(requestCaptor.capture()))
+        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
+            .build()));
+
+    transform.transform(originalRequest, nextMock);
+    var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{company:brewery(identifier:\"foo\") {identifier name}}"));
@@ -60,8 +83,14 @@ class RenameObjectFieldsTest {
 
     transform.transformSchema(originalSchema);
 
-    var request = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
-    var transformedRequest = transform.transformRequest(request);
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
+
+    Mockito.when(nextMock.apply(requestCaptor.capture()))
+        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
+            .build()));
+
+    transform.transform(originalRequest, nextMock);
+    var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier label:name}}"));
@@ -74,8 +103,14 @@ class RenameObjectFieldsTest {
 
     transform.transformSchema(originalSchema);
 
-    var request = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
-    var transformedRequest = transform.transformRequest(request);
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
+
+    Mockito.when(nextMock.apply(requestCaptor.capture()))
+        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
+            .build()));
+
+    transform.transform(originalRequest, nextMock);
+    var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier ... on Brewery {label:name}}}"));
