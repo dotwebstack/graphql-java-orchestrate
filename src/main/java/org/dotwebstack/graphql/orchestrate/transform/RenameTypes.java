@@ -48,12 +48,7 @@ public class RenameTypes extends AbstractTransform {
   @Override
   public CompletableFuture<Result> transform(@NonNull Request originalRequest,
       @NonNull Function<Request, CompletableFuture<Result>> next) {
-    var transformedRequest = transformRequest(originalRequest);
-    return next.apply(transformedRequest);
-  }
-
-  private Request transformRequest(@NonNull Request originalRequest) {
-    return mapRequest(originalRequest, originalSchema, RequestMapping.newRequestMapping()
+    var transformedRequest = mapRequest(originalRequest, originalSchema, RequestMapping.newRequestMapping()
         .field(environment -> {
           var field = environment.getField();
           var fieldType = environment.getFieldDefinition()
@@ -69,6 +64,8 @@ public class RenameTypes extends AbstractTransform {
           return TraversalControl.CONTINUE;
         })
         .build());
+
+    return next.apply(transformedRequest);
   }
 
   private String renameType(GraphQLNamedType type) {

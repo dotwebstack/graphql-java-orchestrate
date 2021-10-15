@@ -51,12 +51,7 @@ public class RenameObjectFields extends AbstractTransform {
   @Override
   public CompletableFuture<Result> transform(@NonNull Request originalRequest,
       @NonNull Function<Request, CompletableFuture<Result>> next) {
-    var transformedRequest = transformRequest(originalRequest);
-    return next.apply(transformedRequest);
-  }
-
-  private Request transformRequest(@NonNull Request request) {
-    return mapRequest(request, transformedSchema, RequestMapping.newRequestMapping()
+    var transformedRequest = mapRequest(originalRequest, transformedSchema, RequestMapping.newRequestMapping()
         .field(environment -> {
           var field = environment.getField();
           var fieldsContainer = environment.getFieldsContainer();
@@ -68,6 +63,8 @@ public class RenameObjectFields extends AbstractTransform {
               .orElse(TraversalControl.CONTINUE);
         })
         .build());
+
+    return next.apply(transformedRequest);
   }
 
   private Optional<String> findMappedName(GraphQLFieldsContainer fieldsContainer, Field field) {

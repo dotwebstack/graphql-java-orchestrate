@@ -7,7 +7,7 @@ import graphql.language.OperationDefinition;
 import graphql.language.SelectionSet;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.Builder;
 import lombok.NonNull;
@@ -37,15 +37,11 @@ public class SimpleDelegator implements Delegator {
         .selectionSet(new SelectionSet(List.of(rootField)))
         .build();
 
-    if (subschema.getTransform() != null) {
-      return subschema.getTransform()
-          .transform(originalRequest, this::delegateRequest)
-          .thenApply(Result::getData);
-    }
-
-    return this.delegateRequest(originalRequest)
-        .thenApply(Result::getData);
-
+    return Optional.ofNullable(subschema.getTransform())
+        .map(transform -> transform.transform(originalRequest, this::delegateRequest))
+        .orElseGet(() -> this.delegateRequest(originalRequest))
+        .thenApply(result -> result.getData()
+            .get(fieldName));
   }
 
   private CompletableFuture<Result> delegateRequest(Request request) {
@@ -63,10 +59,8 @@ public class SimpleDelegator implements Delegator {
   }
 
   private Result mapResult(ExecutionResult executionResult) {
-    Map<String, Object> resultData = executionResult.getData();
-
     return Result.newResult()
-        .data(resultData.get(fieldName))
+        .data(executionResult.getData())
         .build();
   }
 }

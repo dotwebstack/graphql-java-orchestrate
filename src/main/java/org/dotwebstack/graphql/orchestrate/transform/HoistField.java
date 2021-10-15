@@ -23,6 +23,7 @@ import graphql.schema.GraphQLTypeUtil;
 import graphql.util.TraversalControl;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -152,8 +153,9 @@ public class HoistField extends AbstractTransform {
     return includeFieldPath(excludeField(selectionSet, targetFieldName), sourceFieldPath);
   }
 
+  @SuppressWarnings("unchecked")
   private Result dehoistFields(Result result, List<HoistedField> hoistedFields) {
-    var data = hoistedFields.stream()
+    Map<String, Object> data = (Map<String, Object>) hoistedFields.stream()
         .reduce(result.getData(), this::dehoistField, TransformUtils::noopCombiner);
 
     return result.transform(builder -> builder.data(data));

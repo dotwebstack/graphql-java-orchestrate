@@ -158,6 +158,35 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
+  void transformRequest_replacesSelectionSet_ifFieldOverlaps() throws Exception {
+    var transform = new HoistField("Brewery", "founder", List.of("founder", "name"));
+
+    transform.transformSchema(originalSchema);
+
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founder}}");
+
+    var proxyResult = Result.newResult()
+        .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("name", "bar"))))
+        .build();
+
+    Mockito.when(nextMock.apply(requestCaptor.capture()))
+        .thenReturn(CompletableFuture.completedFuture(proxyResult));
+
+    var result = transform.transform(originalRequest, nextMock)
+        .get();
+
+    Map<String, Object> resultData = result.getData();
+    assertThat(resultData.size(), is(1));
+    assertThat(((Map<String, Object>) resultData.get("brewery")).get("founder"), equalTo("bar"));
+
+    var transformedRequest = requestCaptor.getValue();
+
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier founder {name}}}"));
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
   void transformRequest_mergesSelectionSet_ifSelectionsOverlap() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
