@@ -128,13 +128,13 @@ class TransformUtils {
     return selectionSet.transform(builder -> builder.selections(selections));
   }
 
-//  public static List<Field> getResultPath(TraverserContext<Node> context, Field field) {
-//    var parentFields = context.getParentNodes()
-//        .stream()
-//        .filter(Field.class::isInstance)
-//        .map(Field.class::cast)
-//        .collect(Collectors.toList());
-//
-//    return listAppend(parentFields, field);
-//  }
+  // public static List<Field> getResultPath(TraverserContext<Node> context, Field field) {
+  // var parentFields = context.getParentNodes()
+  // .stream()
+  // .filter(Field.class::isInstance)
+  // .map(Field.class::cast)
+  // .collect(Collectors.toList());
+  //
+  // return listAppend(parentFields, field);
+  // }
 }
