@@ -76,7 +76,7 @@ class SimpleDelegatorTest {
 
     when(environment.getField()).thenReturn(newField(fieldName).build());
 
-    var delegatorBuilder = SimpleDelegator.builder()
+    var delegatorBuilder = SimpleDelegator.newDelegator()
         .subschema(subschema)
         .fieldName(fieldName);
 

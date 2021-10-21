@@ -15,7 +15,7 @@ import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 
-@Builder
+@Builder(builderMethodName = "newDelegator")
 public class SimpleDelegator implements Delegator {
 
   @NonNull

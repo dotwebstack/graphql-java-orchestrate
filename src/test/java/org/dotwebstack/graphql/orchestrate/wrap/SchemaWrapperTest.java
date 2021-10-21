@@ -46,7 +46,7 @@ class SchemaWrapperTest {
   void wrap_appliesSchemaTransforms_onGivenSubschema() {
     var transform = new RenameTypes((typeName, typeDefinition) -> typeName.equals("Brewery") ? "Company" : typeName);
 
-    var subschema = Subschema.builder()
+    var subschema = Subschema.newSubschema()
         .schema(originalSchema)
         .transform(transform)
         .build();
@@ -59,7 +59,7 @@ class SchemaWrapperTest {
 
   @Test
   void wrap_delegatesDataFetcher_usingGivenExecutor() throws Exception {
-    var subschema = Subschema.builder()
+    var subschema = Subschema.newSubschema()
         .schema(originalSchema)
         .executor(executor)
         .build();

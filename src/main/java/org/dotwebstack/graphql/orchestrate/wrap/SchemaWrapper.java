@@ -36,7 +36,7 @@ public class SchemaWrapper {
   }
 
   private static DataFetcher<Object> createDataFetcher(Subschema subschema, GraphQLFieldDefinition fieldDefinition) {
-    var delegator = SimpleDelegator.builder()
+    var delegator = SimpleDelegator.newDelegator()
         .subschema(subschema)
         .fieldName(fieldDefinition.getName())
         .argsFromEnv(environment -> environment.getField()

@@ -13,7 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@Builder
+@Builder(builderMethodName = "newExecutor")
 public class RemoteExecutor implements Executor {
 
   @NonNull

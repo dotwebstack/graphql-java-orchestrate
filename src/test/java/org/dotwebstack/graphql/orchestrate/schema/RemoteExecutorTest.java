@@ -47,7 +47,7 @@ class RemoteExecutorTest {
 
   @Test
   void execute_performsHttpCall_OnGivenEndpoint() throws Exception {
-    var executor = RemoteExecutor.builder()
+    var executor = RemoteExecutor.newExecutor()
         .endpoint(URI.create(String.format("http://%s:%d", mockWebServer.getHostName(), mockWebServer.getPort())))
         .webClient(webClient)
         .build();

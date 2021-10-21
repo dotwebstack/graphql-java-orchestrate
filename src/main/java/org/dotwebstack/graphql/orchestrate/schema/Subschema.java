@@ -5,6 +5,7 @@ import graphql.ExecutionResult;
 import graphql.GraphQL;
 import graphql.schema.GraphQLSchema;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -12,7 +13,7 @@ import org.dotwebstack.graphql.orchestrate.transform.Transform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Builder
+@Builder(builderMethodName = "newSubschema", toBuilder = true)
 @Getter
 public class Subschema {
 
@@ -36,5 +37,11 @@ public class Subschema {
         .build();
 
     return graphql.executeAsync(input);
+  }
+
+  public Subschema transform(@NonNull Consumer<Subschema.SubschemaBuilder> builderConsumer) {
+    var builder = toBuilder();
+    builderConsumer.accept(builder);
+    return builder.build();
   }
 }
