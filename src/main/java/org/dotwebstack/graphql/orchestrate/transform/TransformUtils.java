@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.dotwebstack.graphql.orchestrate.Request;
 
-class TransformUtils {
+public class TransformUtils {
 
   private TransformUtils() {}
 
