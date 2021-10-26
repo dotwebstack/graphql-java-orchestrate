@@ -242,4 +242,41 @@ class HoistFieldTest {
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier ambassadors {name}}}"));
   }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void transformRequest_returnsListField_ifOtherSourceFieldIsList() throws Exception {
+    var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
+
+    transform.transformSchema(originalSchema);
+
+    var originalRequest =
+        parseQuery("{brewery(identifier:\"foo\") {identifier collaborators {identifier ambassadorNames}}}");
+
+    var proxyResult = Result.newResult()
+        .data(Map.of("brewery",
+            Map.of("identifier", "foo", "collaborators",
+                List.of(Map.of("identifier", "baz", "ambassadors", List.of(Map.of("name", "bar")))))))
+        .build();
+
+    Mockito.when(nextMock.apply(requestCaptor.capture()))
+        .thenReturn(CompletableFuture.completedFuture(proxyResult));
+
+    var result = transform.transform(originalRequest, nextMock)
+        .get();
+
+    Map<String, Object> resultData = result.getData();
+    assertThat(resultData.size(), is(1));
+
+    Map<String, Object> brewery = (Map<String, Object>) resultData.get("brewery");
+    assertThat(brewery.containsKey("ambassadorNames"), is(false));
+
+    Map<String, Object> collaborator = ((List<Map<String, Object>>) brewery.get("collaborators")).get(0);
+    assertThat(collaborator.get("ambassadorNames"), equalTo(List.of("bar")));
+
+    var transformedRequest = requestCaptor.getValue();
+
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier collaborators {identifier ambassadors {name}}}}"));
+  }
 }

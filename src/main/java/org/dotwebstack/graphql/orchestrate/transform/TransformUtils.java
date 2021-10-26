@@ -6,6 +6,7 @@ import static java.util.Collections.unmodifiableMap;
 
 import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.analysis.QueryVisitorStub;
+import graphql.com.google.common.collect.Lists;
 import graphql.language.Field;
 import graphql.language.Node;
 import graphql.language.Selection;
@@ -20,6 +21,7 @@ import graphql.util.TraverserContext;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.dotwebstack.graphql.orchestrate.Request;
@@ -137,27 +139,13 @@ public class TransformUtils {
   }
 
   @SuppressWarnings("rawtypes")
-  public static List<String> getResultPath(TraverserContext<Node> context, Field field) {
-    var parentFields = context.getParentNodes()
+  public static List<String> getResultPath(TraverserContext<Node> context) {
+    return Lists.reverse(context.getParentNodes())
         .stream()
         .filter(Field.class::isInstance)
         .map(Field.class::cast)
         .map(Field::getResultKey)
         .collect(Collectors.toList());
-
-    return listAppend(parentFields, field.getResultKey());
-  }
-
-  @SuppressWarnings("rawtypes")
-  public static List<String> getResultPath(TraverserContext<Node> context, List<String> fieldPath) {
-    var parentFields = context.getParentNodes()
-        .stream()
-        .filter(Field.class::isInstance)
-        .map(Field.class::cast)
-        .map(Field::getResultKey)
-        .collect(Collectors.toList());
-
-    return listMerge(parentFields, fieldPath);
   }
 
   public static Object getFieldValue(Object data, List<String> fieldPath) {
@@ -186,35 +174,43 @@ public class TransformUtils {
     throw new TransformException("Unsupported field type.");
   }
 
-  @SuppressWarnings("unchecked")
-  public static Object putFieldValue(Object data, List<String> fieldPath, Object fieldValue) {
-    var fieldPathSize = fieldPath.size();
+  public static Map<String, Object> putMapValue(Map<String, Object> inputMap, String key, Object value) {
+    var dataMap = new HashMap<>(inputMap);
+    dataMap.put(key, value);
+    return unmodifiableMap(dataMap);
+  }
 
+  public static Object mapTransform(Object data, List<String> fieldPath, UnaryOperator<Map<String, Object>> mapper) {
+    return mapApply(data, dataMap -> mapTransform(dataMap, fieldPath, mapper));
+  }
+
+  public static Map<String, Object> mapTransform(Map<String, Object> data, List<String> fieldPath,
+      UnaryOperator<Map<String, Object>> mapper) {
+    var fieldPathSize = fieldPath.size();
+    var fieldKey = fieldPath.get(0);
+    var fieldValue = data.get(fieldKey);
+
+    // Recursively transform nested values, if final field has not been reached yet
+    if (fieldPathSize > 1) {
+      return putMapValue(data, fieldKey, mapTransform(fieldValue, fieldPath.subList(1, fieldPathSize), mapper));
+    }
+
+    return putMapValue(data, fieldKey, mapApply(fieldValue, mapper));
+  }
+
+  @SuppressWarnings("unchecked")
+  public static Object mapApply(Object data, UnaryOperator<Map<String, Object>> mapper) {
     if (data instanceof List) {
-      return (((List<Object>) data).stream()).map(item -> putFieldValue(item, fieldPath, fieldValue))
+      return ((List<Map<String, Object>>) data).stream()
+          .map(mapper)
           .collect(Collectors.toList());
     }
 
-    if (!(data instanceof Map)) {
-      throw new TransformException("Unsupported field type.");
+    if (data instanceof Map) {
+      return mapper.apply((Map<String, Object>) data);
     }
 
-    var fieldKey = fieldPath.get(0);
-    var dataMap = ((Map<String, Object>) data);
-
-    if (fieldPathSize == 1) {
-      return putFieldValue(dataMap, fieldKey, fieldValue);
-    }
-
-    var nestedMap = dataMap.getOrDefault(fieldKey, Map.of());
-
-    return putFieldValue(dataMap, fieldKey, putFieldValue(nestedMap, fieldPath.subList(1, fieldPathSize), fieldValue));
-  }
-
-  public static Map<String, Object> putFieldValue(Map<String, Object> data, String fieldKey, Object fieldValue) {
-    var dataMap = new HashMap<>(data);
-    dataMap.put(fieldKey, fieldValue);
-    return unmodifiableMap(dataMap);
+    throw new TransformException("Unsupported field type.");
   }
 
   public static <T> T noopCombiner(T o1, T o2) {

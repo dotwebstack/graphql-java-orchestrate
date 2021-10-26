@@ -9,7 +9,8 @@ import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getRe
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.includeFieldPath;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapRequest;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapSchema;
-import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.putFieldValue;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.mapTransform;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.putMapValue;
 
 import graphql.analysis.QueryVisitorFieldEnvironment;
 import graphql.language.SelectionSet;
@@ -122,9 +123,11 @@ public class HoistField extends AbstractTransform {
             return CONTINUE;
           }
 
+          var targetKey = environment.getField()
+              .getResultKey();
+
           // Keep track of all hoisted fields in the selection tree
-          hoistedFields.add(new HoistedField(getResultPath(environment.getTraverserContext(), sourceFieldPath),
-              getResultPath(environment.getTraverserContext(), environment.getField())));
+          hoistedFields.add(new HoistedField(getResultPath(environment.getTraverserContext()), targetKey));
 
           return hoistField(environment);
         })
@@ -162,20 +165,20 @@ public class HoistField extends AbstractTransform {
   }
 
   private Object dehoistField(Object data, HoistedField hoistedField) {
-    var fieldValue = getFieldValue(data, hoistedField.getSourcePath());
-    return putFieldValue(data, hoistedField.getTargetPath(), fieldValue);
+    return mapTransform(data, hoistedField.getBasePath(), fieldContainer -> putMapValue(fieldContainer,
+        hoistedField.getTargetKey(), getFieldValue(fieldContainer, sourceFieldPath)));
   }
 
   @Getter
   private static class HoistedField {
 
-    private final List<String> sourcePath;
+    private final List<String> basePath;
 
-    private final List<String> targetPath;
+    private final String targetKey;
 
-    public HoistedField(List<String> sourcePath, List<String> targetPath) {
-      this.sourcePath = sourcePath;
-      this.targetPath = targetPath;
+    public HoistedField(List<String> basePath, String targetKey) {
+      this.basePath = basePath;
+      this.targetKey = targetKey;
     }
   }
 }
