@@ -9,6 +9,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 import graphql.language.AstPrinter;
 import graphql.schema.GraphQLList;
@@ -26,7 +27,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -140,8 +140,7 @@ class HoistFieldTest {
         .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("name", "bar"))))
         .build();
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(proxyResult));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
 
     var result = transform.transform(originalRequest, nextMock)
         .get();
@@ -169,8 +168,7 @@ class HoistFieldTest {
         .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("name", "bar"))))
         .build();
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(proxyResult));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
 
     var result = transform.transform(originalRequest, nextMock)
         .get();
@@ -198,8 +196,7 @@ class HoistFieldTest {
         .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("identifier", "baz", "name", "bar"))))
         .build();
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(proxyResult));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
 
     var result = transform.transform(originalRequest, nextMock)
         .get();
@@ -227,8 +224,7 @@ class HoistFieldTest {
         .data(Map.of("brewery", Map.of("identifier", "foo", "ambassadors", List.of(Map.of("name", "bar")))))
         .build();
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(proxyResult));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
 
     var result = transform.transform(originalRequest, nextMock)
         .get();
@@ -259,8 +255,7 @@ class HoistFieldTest {
                 List.of(Map.of("identifier", "baz", "ambassadors", List.of(Map.of("name", "bar")))))))
         .build();
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(proxyResult));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
 
     var result = transform.transform(originalRequest, nextMock)
         .get();

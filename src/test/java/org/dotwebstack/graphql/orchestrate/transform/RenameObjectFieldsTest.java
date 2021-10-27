@@ -9,6 +9,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.Mockito.when;
 
 import graphql.language.AstPrinter;
 import graphql.schema.GraphQLSchema;
@@ -22,7 +23,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,9 +65,8 @@ class RenameObjectFieldsTest {
 
     var originalRequest = parseQuery("{company(identifier:\"foo\") {identifier name}}");
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
-            .build()));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(Result.newResult()
+        .build()));
 
     transform.transform(originalRequest, nextMock);
     var transformedRequest = requestCaptor.getValue();
@@ -85,9 +84,8 @@ class RenameObjectFieldsTest {
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
-            .build()));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(Result.newResult()
+        .build()));
 
     transform.transform(originalRequest, nextMock);
     var transformedRequest = requestCaptor.getValue();
@@ -105,9 +103,8 @@ class RenameObjectFieldsTest {
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
-            .build()));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(Result.newResult()
+        .build()));
 
     transform.transform(originalRequest, nextMock);
     var transformedRequest = requestCaptor.getValue();

@@ -4,6 +4,7 @@ import static org.dotwebstack.graphql.orchestrate.test.TestUtils.loadSchema;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.parseQuery;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Mockito.when;
 
 import graphql.language.AstPrinter;
 import graphql.schema.GraphQLSchema;
@@ -17,7 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,9 +44,8 @@ class RenameTypesTest {
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Company {name}}}");
 
-    Mockito.when(nextMock.apply(requestCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(Result.newResult()
-            .build()));
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(Result.newResult()
+        .build()));
 
     transform.transform(originalRequest, nextMock);
     var transformedRequest = requestCaptor.getValue();

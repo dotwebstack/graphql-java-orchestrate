@@ -39,7 +39,7 @@ public class Subschema {
     return graphql.executeAsync(input);
   }
 
-  public Subschema transform(@NonNull Consumer<Subschema.SubschemaBuilder> builderConsumer) {
+  public Subschema transform(@NonNull Consumer<SubschemaBuilder> builderConsumer) {
     var builder = toBuilder();
     builderConsumer.accept(builder);
     return builder.build();
