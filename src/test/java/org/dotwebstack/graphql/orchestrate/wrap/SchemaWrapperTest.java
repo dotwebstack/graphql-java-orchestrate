@@ -82,15 +82,6 @@ class SchemaWrapperTest {
     assertThat(result, equalTo(result));
   }
 
-  private Field createField(List<Argument> arguments) {
-    return Field.newField("brewery")
-        .arguments(arguments)
-        .selectionSet(SelectionSet.newSelectionSet()
-            .selection(new Field("name"))
-            .build())
-        .build();
-  }
-
   private DataFetchingEnvironment createEnvironment() {
     var field = Field.newField("brewery")
         .arguments(List.of(new Argument("identificatie", StringValue.of("foo"))))
