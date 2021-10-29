@@ -87,8 +87,8 @@ class RemoteExecutorTest {
         .webClient(webClient)
         .build();
 
-    var query = "query Query($identificatie: String) {brewery($identificatie) {identifier name}}";
-    Map<String, Object> variables = Map.of("identificatie", "foo");
+    var query = "query Query($identifier: String) {brewery($identifier) {identifier name}}";
+    Map<String, Object> variables = Map.of("identifier", "foo");
 
     var input = ExecutionInput.newExecutionInput()
         .query(query)

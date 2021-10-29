@@ -1,8 +1,5 @@
 package org.dotwebstack.graphql.orchestrate.delegate;
 
-import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasStringArgument;
-import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasZeroArguments;
-import static org.dotwebstack.graphql.orchestrate.test.TestUtils.extractQueryField;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.when;
@@ -15,10 +12,14 @@ import graphql.language.Field;
 import graphql.language.OperationDefinition;
 import graphql.language.SelectionSet;
 import graphql.language.StringValue;
+import graphql.language.TypeName;
+import graphql.language.VariableDefinition;
+import graphql.language.VariableReference;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingEnvironmentImpl;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 import org.junit.jupiter.api.Test;
@@ -40,21 +41,23 @@ class SimpleDelegatorTest {
   @Test
   void delegate_delegatesQueryWithoutArgs_whenNoArgsGiven() throws Exception {
     var delegator = createDelegator(null);
-    var environment = createEnvironment(null);
+    var environment = createEnvironment(createField(List.of()), null, List.of(), Map.of());
 
     var result = delegator.delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
 
-    var queryField = extractQueryField(queryCaptor.getValue());
-    assertThat(queryField.getName(), equalTo("foo"));
-    assertThat(queryField, hasZeroArguments());
+    var executionInput = queryCaptor.getValue();
+    assertThat(executionInput.getVariables(), equalTo(Map.of()));
+
+    var query = executionInput.getQuery();
+    assertThat(query, equalTo("query {\n  foo {\n    name\n  }\n}"));
   }
 
   @Test
-  void delegate_delegatesQueryWithArgs_whenArgsGiven() throws Exception {
-    var environment = createEnvironment(Map.of("key1", "val1"));
+  void delegate_delegatesQueryWithArgs_whenArgsPresent() throws Exception {
+    var environment = createEnvironment(createField(List.of()), Map.of("key1", "val1"), List.of(), Map.of());
 
     ArgsFromEnvFunction argsFromEnv = env -> {
       Map<String, String> source = env.getSource();
@@ -66,9 +69,32 @@ class SimpleDelegatorTest {
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
 
-    var queryField = extractQueryField(queryCaptor.getValue());
-    assertThat(queryField.getName(), equalTo("foo"));
-    assertThat(queryField, hasStringArgument("arg1", "val1"));
+    var executionInput = queryCaptor.getValue();
+    assertThat(executionInput.getVariables(), equalTo(Map.of()));
+
+    var query = executionInput.getQuery();
+    assertThat(query, equalTo("query {\n  foo(arg1: \"val1\") {\n    name\n  }\n}"));
+  }
+
+  @Test
+  void delegate_delegatesQueryWithVars_whenVarsPresent() throws Exception {
+    var arguments = List.of(new Argument("identifier", new VariableReference("identifier")));
+    var variableDefinitions = List.of(new VariableDefinition("identifier", new TypeName("String")));
+    Map<String, Object> variables = Map.of("identifier", "foo");
+    var environment = createEnvironment(createField(arguments), null, variableDefinitions, variables);
+    var delegator = createDelegator(null);
+
+    var result = delegator.delegate(environment);
+
+    assertThat(result.isDone(), equalTo(true));
+    assertThat(result.get(), equalTo("bar"));
+
+    var executionInput = queryCaptor.getValue();
+    assertThat(executionInput.getVariables(), equalTo(variables));
+
+    var query = executionInput.getQuery();
+    assertThat(query, equalTo(
+        "query ($identifier: String) {\n" + "  foo(identifier: $identifier) {\n" + "    name\n" + "  }\n" + "}"));
   }
 
   private SimpleDelegator createDelegator(ArgsFromEnvFunction argsFromEnv) {
@@ -88,23 +114,28 @@ class SimpleDelegatorTest {
     return delegatorBuilder.build();
   }
 
-  private DataFetchingEnvironment createEnvironment(Object source) {
-    var field = Field.newField("brewery")
-        .arguments(List.of(new Argument("identificatie", StringValue.of("foo"))))
+  private Field createField(List<Argument> arguments) {
+    return Field.newField("brewery")
+        .arguments(arguments)
         .selectionSet(SelectionSet.newSelectionSet()
             .selection(new Field("name"))
             .build())
         .build();
+  }
 
+  private DataFetchingEnvironment createEnvironment(Field field, Object source,
+      List<VariableDefinition> variableDefinitions, Map<String, Object> variables) {
     return DataFetchingEnvironmentImpl.newDataFetchingEnvironment()
         .operationDefinition(OperationDefinition.newOperationDefinition()
             .operation(OperationDefinition.Operation.QUERY)
-            .variableDefinitions(List.of())
+            .variableDefinitions(variableDefinitions)
             .build())
         .mergedField(MergedField.newMergedField()
             .addField(field)
             .build())
         .source(source)
+        .variables(Optional.ofNullable(variables)
+            .orElse(Map.of()))
         .build();
   }
 }

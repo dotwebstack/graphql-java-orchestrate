@@ -1,11 +1,5 @@
 package org.dotwebstack.graphql.orchestrate.test;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-
-import graphql.ExecutionInput;
-import graphql.language.Field;
 import graphql.language.OperationDefinition;
 import graphql.parser.Parser;
 import graphql.schema.GraphQLArgument;
@@ -89,20 +83,5 @@ public class TestUtils {
     return Optional.ofNullable(fieldDefinition(schema, typeName, fieldName))
         .map(GraphQLFieldDefinition::getArguments)
         .orElse(null);
-  }
-
-  public static Field extractQueryField(ExecutionInput executionInput) {
-    var document = Parser.parse(executionInput.getQuery());
-    var operations = document.getDefinitionsOfType(OperationDefinition.class);
-
-    assertThat(operations, hasSize(1));
-    var queryOperation = operations.get(0);
-    assertThat(queryOperation.getOperation(), equalTo(OperationDefinition.Operation.QUERY));
-
-    var fields = queryOperation.getSelectionSet()
-        .getSelectionsOfType(Field.class);
-
-    assertThat(fields, hasSize(1));
-    return fields.get(0);
   }
 }

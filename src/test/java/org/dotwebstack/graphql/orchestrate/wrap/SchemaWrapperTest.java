@@ -84,7 +84,7 @@ class SchemaWrapperTest {
 
   private DataFetchingEnvironment createEnvironment() {
     var field = Field.newField("brewery")
-        .arguments(List.of(new Argument("identificatie", StringValue.of("foo"))))
+        .arguments(List.of(new Argument("identifier", StringValue.of("foo"))))
         .selectionSet(SelectionSet.newSelectionSet()
             .selection(new Field("name"))
             .build())
