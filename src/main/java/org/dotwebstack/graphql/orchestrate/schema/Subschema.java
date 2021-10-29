@@ -9,15 +9,13 @@ import java.util.function.Consumer;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.dotwebstack.graphql.orchestrate.transform.Transform;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-@Builder(builderMethodName = "newSubschema", toBuilder = true)
+@Slf4j
 @Getter
+@Builder(builderMethodName = "newSubschema", toBuilder = true)
 public class Subschema {
-
-  private static final Logger LOG = LoggerFactory.getLogger(Subschema.class);
 
   @NonNull
   private final GraphQLSchema schema;

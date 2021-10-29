@@ -1,6 +1,5 @@
 package org.dotwebstack.graphql.orchestrate.delegate;
 
-import static graphql.language.Field.newField;
 import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasStringArgument;
 import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasZeroArguments;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.extractQueryField;
@@ -10,9 +9,14 @@ import static org.mockito.Mockito.when;
 
 import graphql.ExecutionInput;
 import graphql.ExecutionResultImpl;
+import graphql.execution.MergedField;
 import graphql.language.Argument;
+import graphql.language.Field;
+import graphql.language.OperationDefinition;
+import graphql.language.SelectionSet;
 import graphql.language.StringValue;
 import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingEnvironmentImpl;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -30,15 +34,14 @@ class SimpleDelegatorTest {
   @Mock
   private Subschema subschema;
 
-  @Mock
-  private DataFetchingEnvironment environment;
-
   @Captor
   private ArgumentCaptor<ExecutionInput> queryCaptor;
 
   @Test
   void delegate_delegatesQueryWithoutArgs_whenNoArgsGiven() throws Exception {
-    var delegator = buildDelegator("foo", "bar", null);
+    var delegator = createDelegator(null);
+    var environment = createEnvironment(null);
+
     var result = delegator.delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
@@ -51,14 +54,14 @@ class SimpleDelegatorTest {
 
   @Test
   void delegate_delegatesQueryWithArgs_whenArgsGiven() throws Exception {
-    when(environment.getSource()).thenReturn(Map.of("key1", "val1"));
+    var environment = createEnvironment(Map.of("key1", "val1"));
 
     ArgsFromEnvFunction argsFromEnv = env -> {
       Map<String, String> source = env.getSource();
       return List.of(new Argument("arg1", StringValue.of(source.get("key1"))));
     };
 
-    var result = buildDelegator("foo", "bar", argsFromEnv).delegate(environment);
+    var result = createDelegator(argsFromEnv).delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
@@ -68,22 +71,40 @@ class SimpleDelegatorTest {
     assertThat(queryField, hasStringArgument("arg1", "val1"));
   }
 
-  private SimpleDelegator buildDelegator(String fieldName, Object data, ArgsFromEnvFunction argsFromEnv) {
+  private SimpleDelegator createDelegator(ArgsFromEnvFunction argsFromEnv) {
     when(subschema.execute(queryCaptor.capture()))
         .thenReturn(CompletableFuture.completedFuture(ExecutionResultImpl.newExecutionResult()
-            .data(Map.of(fieldName, data))
+            .data(Map.of("foo", "bar"))
             .build()));
-
-    when(environment.getField()).thenReturn(newField(fieldName).build());
 
     var delegatorBuilder = SimpleDelegator.newDelegator()
         .subschema(subschema)
-        .fieldName(fieldName);
+        .fieldName("foo");
 
     if (argsFromEnv != null) {
       delegatorBuilder.argsFromEnv(argsFromEnv);
     }
 
     return delegatorBuilder.build();
+  }
+
+  private DataFetchingEnvironment createEnvironment(Object source) {
+    var field = Field.newField("brewery")
+        .arguments(List.of(new Argument("identificatie", StringValue.of("foo"))))
+        .selectionSet(SelectionSet.newSelectionSet()
+            .selection(new Field("name"))
+            .build())
+        .build();
+
+    return DataFetchingEnvironmentImpl.newDataFetchingEnvironment()
+        .operationDefinition(OperationDefinition.newOperationDefinition()
+            .operation(OperationDefinition.Operation.QUERY)
+            .variableDefinitions(List.of())
+            .build())
+        .mergedField(MergedField.newMergedField()
+            .addField(field)
+            .build())
+        .source(source)
+        .build();
   }
 }

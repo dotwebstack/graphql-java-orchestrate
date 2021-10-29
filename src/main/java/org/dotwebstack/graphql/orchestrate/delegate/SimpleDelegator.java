@@ -11,10 +11,12 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.Builder;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 
+@Slf4j
 @Builder(builderMethodName = "newDelegator")
 public class SimpleDelegator implements Delegator {
 
@@ -35,6 +37,9 @@ public class SimpleDelegator implements Delegator {
 
     var originalRequest = Request.newRequest()
         .selectionSet(new SelectionSet(List.of(rootField)))
+        .variableDefinitions(environment.getOperationDefinition()
+            .getVariableDefinitions())
+        .variables(environment.getVariables())
         .build();
 
     return Optional.ofNullable(subschema.getTransform())
@@ -48,10 +53,12 @@ public class SimpleDelegator implements Delegator {
     var operationDefinition = OperationDefinition.newOperationDefinition()
         .operation(OperationDefinition.Operation.QUERY)
         .selectionSet(request.getSelectionSet())
+        .variableDefinitions(request.getVariableDefinitions())
         .build();
 
     var executionInput = ExecutionInput.newExecutionInput()
         .query(AstPrinter.printAst(operationDefinition))
+        .variables(request.getVariables())
         .build();
 
     return subschema.execute(executionInput)
