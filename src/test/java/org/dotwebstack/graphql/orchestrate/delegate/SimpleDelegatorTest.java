@@ -1,20 +1,25 @@
 package org.dotwebstack.graphql.orchestrate.delegate;
 
-import static graphql.language.Field.newField;
-import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasStringArgument;
-import static org.dotwebstack.graphql.orchestrate.test.Matchers.hasZeroArguments;
-import static org.dotwebstack.graphql.orchestrate.test.TestUtils.extractQueryField;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.Mockito.when;
 
 import graphql.ExecutionInput;
 import graphql.ExecutionResultImpl;
+import graphql.execution.MergedField;
 import graphql.language.Argument;
+import graphql.language.Field;
+import graphql.language.OperationDefinition;
+import graphql.language.SelectionSet;
 import graphql.language.StringValue;
+import graphql.language.TypeName;
+import graphql.language.VariableDefinition;
+import graphql.language.VariableReference;
 import graphql.schema.DataFetchingEnvironment;
+import graphql.schema.DataFetchingEnvironmentImpl;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 import org.junit.jupiter.api.Test;
@@ -30,60 +35,110 @@ class SimpleDelegatorTest {
   @Mock
   private Subschema subschema;
 
-  @Mock
-  private DataFetchingEnvironment environment;
-
   @Captor
   private ArgumentCaptor<ExecutionInput> queryCaptor;
 
   @Test
   void delegate_delegatesQueryWithoutArgs_whenNoArgsGiven() throws Exception {
-    var delegator = buildDelegator("foo", "bar", null);
+    var delegator = createDelegator(null);
+    var environment = createEnvironment(createField(List.of()), null, List.of(), Map.of());
+
     var result = delegator.delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
 
-    var queryField = extractQueryField(queryCaptor.getValue());
-    assertThat(queryField.getName(), equalTo("foo"));
-    assertThat(queryField, hasZeroArguments());
+    var executionInput = queryCaptor.getValue();
+    assertThat(executionInput.getVariables(), equalTo(Map.of()));
+
+    var query = executionInput.getQuery();
+    assertThat(query, equalTo("query {\n  foo {\n    name\n  }\n}"));
   }
 
   @Test
-  void delegate_delegatesQueryWithArgs_whenArgsGiven() throws Exception {
-    when(environment.getSource()).thenReturn(Map.of("key1", "val1"));
+  void delegate_delegatesQueryWithArgs_whenArgsPresent() throws Exception {
+    var environment = createEnvironment(createField(List.of()), Map.of("key1", "val1"), List.of(), Map.of());
 
     ArgsFromEnvFunction argsFromEnv = env -> {
       Map<String, String> source = env.getSource();
       return List.of(new Argument("arg1", StringValue.of(source.get("key1"))));
     };
 
-    var result = buildDelegator("foo", "bar", argsFromEnv).delegate(environment);
+    var result = createDelegator(argsFromEnv).delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
     assertThat(result.get(), equalTo("bar"));
 
-    var queryField = extractQueryField(queryCaptor.getValue());
-    assertThat(queryField.getName(), equalTo("foo"));
-    assertThat(queryField, hasStringArgument("arg1", "val1"));
+    var executionInput = queryCaptor.getValue();
+    assertThat(executionInput.getVariables(), equalTo(Map.of()));
+
+    var query = executionInput.getQuery();
+    assertThat(query, equalTo("query {\n  foo(arg1: \"val1\") {\n    name\n  }\n}"));
   }
 
-  private SimpleDelegator buildDelegator(String fieldName, Object data, ArgsFromEnvFunction argsFromEnv) {
+  @Test
+  void delegate_delegatesQueryWithVars_whenVarsPresent() throws Exception {
+    var arguments = List.of(new Argument("identifier", new VariableReference("identifier")));
+    var variableDefinitions = List.of(new VariableDefinition("identifier", new TypeName("String")));
+    Map<String, Object> variables = Map.of("identifier", "foo");
+    var environment = createEnvironment(createField(arguments), null, variableDefinitions, variables);
+
+    ArgsFromEnvFunction argsFromEnv = env -> env.getField()
+        .getArguments();
+
+    var delegator = createDelegator(argsFromEnv);
+    var result = delegator.delegate(environment);
+
+    assertThat(result.isDone(), equalTo(true));
+    assertThat(result.get(), equalTo("bar"));
+
+    var executionInput = queryCaptor.getValue();
+    assertThat(executionInput.getVariables(), equalTo(variables));
+
+    var query = executionInput.getQuery();
+    assertThat(query, equalTo(
+        "query ($identifier: String) {\n" + "  foo(identifier: $identifier) {\n" + "    name\n" + "  }\n" + "}"));
+  }
+
+  private SimpleDelegator createDelegator(ArgsFromEnvFunction argsFromEnv) {
     when(subschema.execute(queryCaptor.capture()))
         .thenReturn(CompletableFuture.completedFuture(ExecutionResultImpl.newExecutionResult()
-            .data(Map.of(fieldName, data))
+            .data(Map.of("foo", "bar"))
             .build()));
-
-    when(environment.getField()).thenReturn(newField(fieldName).build());
 
     var delegatorBuilder = SimpleDelegator.newDelegator()
         .subschema(subschema)
-        .fieldName(fieldName);
+        .fieldName("foo");
 
     if (argsFromEnv != null) {
       delegatorBuilder.argsFromEnv(argsFromEnv);
     }
 
     return delegatorBuilder.build();
+  }
+
+  private Field createField(List<Argument> arguments) {
+    return Field.newField("brewery")
+        .arguments(arguments)
+        .selectionSet(SelectionSet.newSelectionSet()
+            .selection(new Field("name"))
+            .build())
+        .build();
+  }
+
+  private DataFetchingEnvironment createEnvironment(Field field, Object source,
+      List<VariableDefinition> variableDefinitions, Map<String, Object> variables) {
+    return DataFetchingEnvironmentImpl.newDataFetchingEnvironment()
+        .operationDefinition(OperationDefinition.newOperationDefinition()
+            .operation(OperationDefinition.Operation.QUERY)
+            .variableDefinitions(variableDefinitions)
+            .build())
+        .mergedField(MergedField.newMergedField()
+            .addField(field)
+            .build())
+        .source(source)
+        .variables(Optional.ofNullable(variables)
+            .orElse(Map.of()))
+        .build();
   }
 }
