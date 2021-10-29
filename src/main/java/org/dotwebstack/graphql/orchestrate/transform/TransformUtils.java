@@ -24,14 +24,13 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.Request;
 
 public class TransformUtils {
 
   private TransformUtils() {}
 
-  public static GraphQLSchema mapSchema(@NonNull GraphQLSchema schema, @NonNull SchemaMapping mapping) {
+  public static GraphQLSchema mapSchema(GraphQLSchema schema, SchemaMapping mapping) {
     var typeVisitor = new GraphQLTypeVisitorStub() {
       @Override
       public TraversalControl visitGraphQLObjectType(GraphQLObjectType node,
@@ -51,8 +50,7 @@ public class TransformUtils {
     return transformSchema(schema, typeVisitor);
   }
 
-  public static Request mapRequest(@NonNull Request request, @NonNull GraphQLSchema schema,
-      @NonNull RequestMapping mapping) {
+  public static Request mapRequest(Request request, GraphQLSchema schema, RequestMapping mapping) {
     var queryTransformer = newQueryTransformer().schema(schema)
         .root(request.getSelectionSet())
         .rootParentType(schema.getQueryType())
@@ -74,27 +72,27 @@ public class TransformUtils {
         .build());
   }
 
-  public static <T> List<T> listAppend(@NonNull List<T> list, @NonNull T element) {
+  public static <T> List<T> listAppend(List<T> list, T element) {
     return Stream.concat(list.stream(), Stream.of(element))
         .collect(Collectors.toList());
   }
 
-  public static <T> List<T> listMerge(@NonNull List<T> list1, @NonNull List<T> list2) {
+  public static <T> List<T> listMerge(List<T> list1, List<T> list2) {
     return Stream.concat(list1.stream(), list2.stream())
         .collect(Collectors.toList());
   }
 
-  public static boolean isField(@NonNull Selection<?> selection, @NonNull String fieldName) {
+  public static boolean isField(Selection<?> selection, String fieldName) {
     return selection instanceof Field && fieldName.equals(((Field) selection).getName());
   }
 
-  public static boolean containsField(@NonNull SelectionSet selectionSet, @NonNull String fieldName) {
+  public static boolean containsField(SelectionSet selectionSet, String fieldName) {
     return selectionSet.getSelectionsOfType(Field.class)
         .stream()
         .anyMatch(field -> fieldName.equals(field.getName()));
   }
 
-  public static SelectionSet includeFieldPath(@NonNull SelectionSet selectionSet, @NonNull List<String> fieldPath) {
+  public static SelectionSet includeFieldPath(SelectionSet selectionSet, List<String> fieldPath) {
     var fieldName = fieldPath.get(0);
     var fieldPathSize = fieldPath.size();
 
@@ -131,7 +129,7 @@ public class TransformUtils {
     return selectionSet.transform(builder -> builder.selections(selections));
   }
 
-  public static SelectionSet excludeField(@NonNull SelectionSet selectionSet, @NonNull String fieldName) {
+  public static SelectionSet excludeField(SelectionSet selectionSet, String fieldName) {
     var selections = selectionSet.getSelections()
         .stream()
         .filter(selection -> !isField(selection, fieldName))
@@ -141,7 +139,7 @@ public class TransformUtils {
   }
 
   @SuppressWarnings("rawtypes")
-  public static List<String> getResultPath(@NonNull TraverserContext<Node> context) {
+  public static List<String> getResultPath(TraverserContext<Node> context) {
     return Lists.reverse(context.getParentNodes())
         .stream()
         .filter(Field.class::isInstance)
@@ -150,7 +148,7 @@ public class TransformUtils {
         .collect(Collectors.toList());
   }
 
-  public static Object getFieldValue(@NonNull Object data, @NonNull List<String> fieldPath) {
+  public static Object getFieldValue(Object data, List<String> fieldPath) {
     var fieldPathSize = fieldPath.size();
     var fieldValue = getFieldValue(data, fieldPath.get(0));
 
@@ -163,7 +161,7 @@ public class TransformUtils {
   }
 
   @SuppressWarnings("unchecked")
-  public static Object getFieldValue(@NonNull Object data, @NonNull String fieldKey) {
+  public static Object getFieldValue(Object data, String fieldKey) {
     if (data instanceof List) {
       return (((List<Object>) data).stream()).map(item -> getFieldValue(item, fieldKey))
           .collect(Collectors.toList());
@@ -176,19 +174,17 @@ public class TransformUtils {
     throw new TransformException("Unsupported field type.");
   }
 
-  public static Map<String, Object> putMapValue(@NonNull Map<String, Object> inputMap, @NonNull String key,
-      @NonNull Object value) {
+  public static Map<String, Object> putMapValue(Map<String, Object> inputMap, String key, Object value) {
     var dataMap = new HashMap<>(inputMap);
     dataMap.put(key, value);
     return unmodifiableMap(dataMap);
   }
 
-  public static Object mapTransform(@NonNull Object data, @NonNull List<String> fieldPath,
-      @NonNull UnaryOperator<Map<String, Object>> mapper) {
+  public static Object mapTransform(Object data, List<String> fieldPath, UnaryOperator<Map<String, Object>> mapper) {
     return mapApply(data, dataMap -> mapTransform(dataMap, fieldPath, mapper));
   }
 
-  public static Map<String, Object> mapTransform(@NonNull Map<String, Object> data, @NonNull List<String> fieldPath,
+  public static Map<String, Object> mapTransform(Map<String, Object> data, List<String> fieldPath,
       UnaryOperator<Map<String, Object>> mapper) {
     var fieldPathSize = fieldPath.size();
     var fieldKey = fieldPath.get(0);
@@ -203,7 +199,7 @@ public class TransformUtils {
   }
 
   @SuppressWarnings("unchecked")
-  public static Object mapApply(@NonNull Object data, @NonNull UnaryOperator<Map<String, Object>> mapper) {
+  public static Object mapApply(Object data, UnaryOperator<Map<String, Object>> mapper) {
     if (data instanceof List) {
       return ((List<Map<String, Object>>) data).stream()
           .map(mapper)
