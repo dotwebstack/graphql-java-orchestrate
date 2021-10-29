@@ -2,7 +2,6 @@ package org.dotwebstack.graphql.orchestrate.delegate;
 
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
-import graphql.language.Argument;
 import graphql.language.AstPrinter;
 import graphql.language.OperationDefinition;
 import graphql.language.SelectionSet;
@@ -10,8 +9,6 @@ import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -36,7 +33,7 @@ public class SimpleDelegator implements Delegator {
   public CompletableFuture<Object> delegate(DataFetchingEnvironment environment) {
     var rootField = environment.getField()
         .transform(builder -> builder.name(fieldName)
-            .arguments(mergeArguments(environment)));
+            .arguments(argsFromEnv.apply(environment)));
 
     var originalRequest = Request.newRequest()
         .selectionSet(new SelectionSet(List.of(rootField)))
@@ -50,16 +47,6 @@ public class SimpleDelegator implements Delegator {
         .orElseGet(() -> this.delegateRequest(originalRequest))
         .thenApply(result -> result.getData()
             .get(fieldName));
-  }
-
-  private List<Argument> mergeArguments(DataFetchingEnvironment environment) {
-    var passedArguments = environment.getField()
-        .getArguments();
-
-    var newArguments = argsFromEnv.apply(environment);
-
-    return Stream.concat(passedArguments.stream(), newArguments.stream())
-        .collect(Collectors.toList());
   }
 
   private CompletableFuture<Result> delegateRequest(Request request) {

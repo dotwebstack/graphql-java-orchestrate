@@ -82,8 +82,11 @@ class SimpleDelegatorTest {
     var variableDefinitions = List.of(new VariableDefinition("identifier", new TypeName("String")));
     Map<String, Object> variables = Map.of("identifier", "foo");
     var environment = createEnvironment(createField(arguments), null, variableDefinitions, variables);
-    var delegator = createDelegator(null);
 
+    ArgsFromEnvFunction argsFromEnv = env -> env.getField()
+        .getArguments();
+
+    var delegator = createDelegator(argsFromEnv);
     var result = delegator.delegate(environment);
 
     assertThat(result.isDone(), equalTo(true));
