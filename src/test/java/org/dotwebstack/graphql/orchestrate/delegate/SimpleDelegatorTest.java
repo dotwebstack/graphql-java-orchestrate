@@ -1,10 +1,13 @@
 package org.dotwebstack.graphql.orchestrate.delegate;
 
+import static org.dotwebstack.graphql.orchestrate.test.TestUtils.rethrowFutureException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import graphql.ExecutionInput;
+import graphql.ExecutionResult;
 import graphql.ExecutionResultImpl;
 import graphql.execution.MergedField;
 import graphql.language.Argument;
@@ -17,6 +20,7 @@ import graphql.language.VariableDefinition;
 import graphql.language.VariableReference;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingEnvironmentImpl;
+import graphql.schema.idl.errors.QueryOperationMissingError;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -100,11 +104,26 @@ class SimpleDelegatorTest {
         "query ($identifier: String) {\n" + "  foo(identifier: $identifier) {\n" + "    name\n" + "  }\n" + "}"));
   }
 
+  @Test
+  void delegate_throwsException_whenExecutionResultContainsErrors() {
+    var environment = createEnvironment(createField(List.of()), null, List.of(), Map.of());
+    var delegator = createDelegator(null, ExecutionResultImpl.newExecutionResult()
+        .errors(List.of(new QueryOperationMissingError()))
+        .build());
+
+    var result = delegator.delegate(environment);
+
+    assertThrows(DelegateException.class, () -> rethrowFutureException(result));
+  }
+
   private SimpleDelegator createDelegator(ArgsFromEnvFunction argsFromEnv) {
-    when(subschema.execute(queryCaptor.capture()))
-        .thenReturn(CompletableFuture.completedFuture(ExecutionResultImpl.newExecutionResult()
-            .data(Map.of("foo", "bar"))
-            .build()));
+    return createDelegator(argsFromEnv, ExecutionResultImpl.newExecutionResult()
+        .data(Map.of("foo", "bar"))
+        .build());
+  }
+
+  private SimpleDelegator createDelegator(ArgsFromEnvFunction argsFromEnv, ExecutionResult executionResult) {
+    when(subschema.execute(queryCaptor.capture())).thenReturn(CompletableFuture.completedFuture(executionResult));
 
     var delegatorBuilder = SimpleDelegator.newDelegator()
         .subschema(subschema)

@@ -15,6 +15,8 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import org.dotwebstack.graphql.orchestrate.Request;
 
 public class TestUtils {
@@ -83,5 +85,13 @@ public class TestUtils {
     return Optional.ofNullable(fieldDefinition(schema, typeName, fieldName))
         .map(GraphQLFieldDefinition::getArguments)
         .orElse(null);
+  }
+
+  public static void rethrowFutureException(CompletableFuture<?> completableFuture) throws Throwable {
+    try {
+      completableFuture.get();
+    } catch (ExecutionException | InterruptedException e) {
+      throw e.getCause();
+    }
   }
 }
