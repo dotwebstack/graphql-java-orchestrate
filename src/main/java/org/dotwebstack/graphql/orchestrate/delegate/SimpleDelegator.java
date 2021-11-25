@@ -11,12 +11,10 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import lombok.Builder;
 import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
 import org.dotwebstack.graphql.orchestrate.Request;
 import org.dotwebstack.graphql.orchestrate.Result;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
 
-@Slf4j
 @Builder(builderMethodName = "newDelegator")
 public class SimpleDelegator implements Delegator {
 

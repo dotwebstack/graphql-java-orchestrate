@@ -33,6 +33,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class HoistFieldTest {
 
   @Mock
+  private TransformContext context;
+
+  @Mock
   private Function<Request, CompletableFuture<Result>> nextMock;
 
   @Captor
@@ -63,20 +66,20 @@ class HoistFieldTest {
   void transformSchema_throwsException_ForInvalidTypeName() {
     var transform = new HoistField("Company", "founderName", List.of("founder", "name"));
 
-    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
+    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema, context));
   }
 
   @Test
   void transformSchema_throwsException_ForInvalidFieldName() {
     var transform = new HoistField("Brewery", "founderAge", List.of("founder", "age"));
 
-    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
+    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema, context));
   }
 
   @Test
   void transformSchema_addsField_IfNotExists() {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
-    var transformedSchema = transform.transformSchema(originalSchema);
+    var transformedSchema = transform.transformSchema(originalSchema, context);
 
     var targetField = transformedSchema.getObjectType("Brewery")
         .getFieldDefinition("founderName");
@@ -90,7 +93,7 @@ class HoistFieldTest {
   @Test
   void transformSchema_addsListField_IfPathContainsList() {
     var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
-    var transformedSchema = transform.transformSchema(originalSchema);
+    var transformedSchema = transform.transformSchema(originalSchema, context);
 
     var targetField = transformedSchema.getObjectType("Brewery")
         .getFieldDefinition("ambassadorNames");
@@ -110,13 +113,13 @@ class HoistFieldTest {
   void transformSchema_throwsException_IfPathContainsMultipleLists() {
     var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies"));
 
-    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
+    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema, context));
   }
 
   @Test
   void transformSchema_replacesField_IfExists() {
     var transform = new HoistField("Brewery", "founder", List.of("founder", "name"));
-    var transformedSchema = transform.transformSchema(originalSchema);
+    var transformedSchema = transform.transformSchema(originalSchema, context);
 
     var targetField = transformedSchema.getObjectType("Brewery")
         .getFieldDefinition("founder");
@@ -132,7 +135,7 @@ class HoistFieldTest {
   void transformRequest_expandsSelectionSet_ifFieldRequested() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founderName}}");
 
@@ -160,7 +163,7 @@ class HoistFieldTest {
   void transformRequest_replacesSelectionSet_ifFieldOverlaps() throws Exception {
     var transform = new HoistField("Brewery", "founder", List.of("founder", "name"));
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founder}}");
 
@@ -188,7 +191,7 @@ class HoistFieldTest {
   void transformRequest_mergesSelectionSet_ifSelectionsOverlap() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founder {identifier} founderName}}");
 
@@ -216,7 +219,7 @@ class HoistFieldTest {
   void transformRequest_returnsListField_ifLeafSourceFieldIsList() throws Exception {
     var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ambassadorNames}}");
 
@@ -244,7 +247,7 @@ class HoistFieldTest {
   void transformRequest_returnsListField_ifOtherSourceFieldIsList() throws Exception {
     var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest =
         parseQuery("{brewery(identifier:\"foo\") {identifier collaborators {identifier ambassadorNames}}}");

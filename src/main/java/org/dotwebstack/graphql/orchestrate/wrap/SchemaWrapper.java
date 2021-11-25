@@ -7,6 +7,7 @@ import graphql.schema.GraphQLSchema;
 import lombok.NonNull;
 import org.dotwebstack.graphql.orchestrate.delegate.SimpleDelegator;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
+import org.dotwebstack.graphql.orchestrate.transform.TransformContext;
 
 public class SchemaWrapper {
 
@@ -24,12 +25,16 @@ public class SchemaWrapper {
         .forEach(fieldDefinition -> codeRegistryBuilder.dataFetcher(originalSchema.getQueryType(), fieldDefinition,
             createDataFetcher(subschema, fieldDefinition)));
 
+    var transformContext = TransformContext.newContext()
+        .subschema(subschema)
+        .build();
+
     // Create new schema with fresh code registry
     var wrappedSchema = originalSchema.transform(builder -> builder.codeRegistry(codeRegistryBuilder.build()));
 
     if (subschema.getTransform() != null) {
       wrappedSchema = subschema.getTransform()
-          .transformSchema(wrappedSchema);
+          .transformSchema(wrappedSchema, transformContext);
     }
 
     return wrappedSchema;

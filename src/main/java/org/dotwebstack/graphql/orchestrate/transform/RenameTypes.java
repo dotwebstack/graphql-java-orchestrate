@@ -34,13 +34,13 @@ public class RenameTypes extends AbstractTransform {
   }
 
   @Override
-  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
+  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema, @NonNull TransformContext context) {
     this.originalSchema = originalSchema;
 
     return mapSchema(originalSchema, SchemaMapping.newSchemaMapping()
-        .objectType((objectType, context) -> changeNode(context,
+        .objectType((objectType, traverserContext) -> changeNode(traverserContext,
             objectType.transform(builder -> builder.name(renameType(objectType)))))
-        .interfaceType((interfaceType, context) -> changeNode(context,
+        .interfaceType((interfaceType, traverserContext) -> changeNode(traverserContext,
             interfaceType.transform(builder -> builder.name(renameType(interfaceType)))))
         .build());
   }

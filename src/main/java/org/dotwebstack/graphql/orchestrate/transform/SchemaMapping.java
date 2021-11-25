@@ -18,11 +18,11 @@ public class SchemaMapping {
 
   @NonNull
   @Builder.Default
-  private final SchemaMappingFunction<GraphQLObjectType> objectType = (element, context) -> CONTINUE;
+  private final SchemaMappingFunction<GraphQLObjectType> objectType = (element, traverserContext) -> CONTINUE;
 
   @NonNull
   @Builder.Default
-  private final SchemaMappingFunction<GraphQLInterfaceType> interfaceType = (element, context) -> CONTINUE;
+  private final SchemaMappingFunction<GraphQLInterfaceType> interfaceType = (element, traverserContext) -> CONTINUE;
 
   public interface SchemaMappingFunction<T>
       extends BiFunction<T, TraverserContext<GraphQLSchemaElement>, TraversalControl> {

@@ -56,13 +56,13 @@ public class HoistField extends AbstractTransform {
   }
 
   @Override
-  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
+  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema, @NonNull TransformContext context) {
     if (originalSchema.getObjectType(typeName) == null) {
       throw new TransformException(String.format("Object type '%s' not found.", typeName));
     }
 
     var schemaMapping = SchemaMapping.newSchemaMapping()
-        .objectType((objectType, context) -> {
+        .objectType((objectType, traverserContext) -> {
           if (!typeName.equals(objectType.getName())) {
             return CONTINUE;
           }
@@ -71,7 +71,7 @@ public class HoistField extends AbstractTransform {
           var hoistedField = sourceField.transform(builder -> builder.name(targetFieldName)
               .type(wrapListType(sourceField.getType())));
 
-          return changeNode(context, objectType.transform(builder -> builder.field(hoistedField)));
+          return changeNode(traverserContext, objectType.transform(builder -> builder.field(hoistedField)));
         })
         .build();
 

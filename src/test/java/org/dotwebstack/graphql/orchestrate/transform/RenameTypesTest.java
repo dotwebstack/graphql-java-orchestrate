@@ -24,6 +24,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class RenameTypesTest {
 
   @Mock
+  private TransformContext context;
+
+  @Mock
   private Function<Request, CompletableFuture<Result>> nextMock;
 
   @Captor
@@ -40,7 +43,7 @@ class RenameTypesTest {
   void transformRequest_replacesTypeName_ForInlineFragments() {
     var transform = new RenameTypes((typeName, typeDefinition) -> typeName.equals("Brewery") ? "Company" : typeName);
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Company {name}}}");
 

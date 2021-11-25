@@ -15,8 +15,8 @@ public abstract class AbstractTransform implements Transform {
 
     return new AbstractTransform() {
       @Override
-      public GraphQLSchema transformSchema(GraphQLSchema originalSchema) {
-        return nextTransform.transformSchema(outerTransform.transformSchema(originalSchema));
+      public GraphQLSchema transformSchema(GraphQLSchema originalSchema, TransformContext context) {
+        return nextTransform.transformSchema(outerTransform.transformSchema(originalSchema, context), context);
       }
 
       @Override
@@ -29,7 +29,7 @@ public abstract class AbstractTransform implements Transform {
   }
 
   @Override
-  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
+  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema, @NonNull TransformContext context) {
     return originalSchema;
   }
 

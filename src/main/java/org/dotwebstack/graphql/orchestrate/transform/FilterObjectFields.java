@@ -16,9 +16,9 @@ public class FilterObjectFields extends AbstractTransform {
   }
 
   @Override
-  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
+  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema, @NonNull TransformContext context) {
     return mapSchema(originalSchema, SchemaMapping.newSchemaMapping()
-        .objectType(((objectType, context) -> {
+        .objectType(((objectType, traverserContext) -> {
           var fieldDefinitions = objectType.getFieldDefinitions()
               .stream()
               .filter(fieldDefinition -> filter.apply(objectType.getName(), fieldDefinition.getName(), fieldDefinition))
@@ -28,7 +28,7 @@ public class FilterObjectFields extends AbstractTransform {
             throw new TransformException("Object types must contain at least 1 field.");
           }
 
-          return changeNode(context, objectType.transform(builder -> builder.replaceFields(fieldDefinitions)));
+          return changeNode(traverserContext, objectType.transform(builder -> builder.replaceFields(fieldDefinitions)));
         }))
         .build());
   }
