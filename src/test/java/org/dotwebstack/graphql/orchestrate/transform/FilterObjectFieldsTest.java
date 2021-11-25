@@ -9,10 +9,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import graphql.schema.GraphQLSchema;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class FilterObjectFieldsTest {
 
   private static GraphQLSchema originalSchema;
+
+  @Mock
+  private TransformContext context;
 
   @BeforeAll
   static void beforeAll() {
@@ -24,7 +31,7 @@ class FilterObjectFieldsTest {
     var transform = new FilterObjectFields(
         (typeName, fieldName, fieldDefinition) -> !(typeName.equals("Brewery") && fieldName.equals("name")));
 
-    var transformedSchema = transform.transformSchema(originalSchema);
+    var transformedSchema = transform.transformSchema(originalSchema, context);
     var breweryType = transformedSchema.getObjectType("Brewery");
 
     assertThat(breweryType.getFieldDefinition("identifier"), notNullValue());
@@ -35,6 +42,6 @@ class FilterObjectFieldsTest {
   void transformSchema_throwsException_whenPredicateMatchesAllFields() {
     var transform = new FilterObjectFields((typeName, fieldName, fieldDefinition) -> !typeName.equals("Brewery"));
 
-    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema));
+    assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema, context));
   }
 }

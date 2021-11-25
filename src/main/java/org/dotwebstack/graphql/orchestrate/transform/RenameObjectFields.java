@@ -33,15 +33,15 @@ public class RenameObjectFields extends AbstractTransform {
   }
 
   @Override
-  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema) {
+  public GraphQLSchema transformSchema(@NonNull GraphQLSchema originalSchema, @NonNull TransformContext context) {
     transformedSchema = mapSchema(originalSchema, SchemaMapping.newSchemaMapping()
-        .objectType((objectType, context) -> {
+        .objectType((objectType, traverserContext) -> {
           var fieldDefinitions = objectType.getFieldDefinitions()
               .stream()
               .map(fieldDefinition -> transformField(objectType, fieldDefinition))
               .collect(Collectors.toList());
 
-          return changeNode(context, objectType.transform(builder -> builder.replaceFields(fieldDefinitions)));
+          return changeNode(traverserContext, objectType.transform(builder -> builder.replaceFields(fieldDefinitions)));
         })
         .build());
 

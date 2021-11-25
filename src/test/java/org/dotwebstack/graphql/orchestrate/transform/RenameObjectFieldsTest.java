@@ -29,6 +29,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class RenameObjectFieldsTest {
 
   @Mock
+  private TransformContext context;
+
+  @Mock
   private Function<Request, CompletableFuture<Result>> nextMock;
 
   @Captor
@@ -46,7 +49,7 @@ class RenameObjectFieldsTest {
     var transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
 
-    var transformedSchema = transform.transformSchema(originalSchema);
+    var transformedSchema = transform.transformSchema(originalSchema, context);
 
     assertThat(fieldType(transformedSchema, "Brewery", "label"), is(fieldType(originalSchema, "Brewery", "name")));
     assertThat(fieldArguments(transformedSchema, "Brewery", "label"),
@@ -61,7 +64,7 @@ class RenameObjectFieldsTest {
     var transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("brewery") ? "company" : fieldName);
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest = parseQuery("{company(identifier:\"foo\") {identifier name}}");
 
@@ -80,7 +83,7 @@ class RenameObjectFieldsTest {
     var transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier label}}");
 
@@ -99,7 +102,7 @@ class RenameObjectFieldsTest {
     var transform = new RenameObjectFields(
         (typeName, fieldName, fieldDefinition) -> fieldName.equals("name") ? "label" : fieldName);
 
-    transform.transformSchema(originalSchema);
+    transform.transformSchema(originalSchema, context);
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
 

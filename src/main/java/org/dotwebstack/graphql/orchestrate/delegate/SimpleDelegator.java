@@ -2,6 +2,7 @@ package org.dotwebstack.graphql.orchestrate.delegate;
 
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
+import graphql.GraphQLError;
 import graphql.language.AstPrinter;
 import graphql.language.OperationDefinition;
 import graphql.language.SelectionSet;
@@ -9,6 +10,7 @@ import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +68,17 @@ public class SimpleDelegator implements Delegator {
   }
 
   private Result mapResult(ExecutionResult executionResult) {
+    var errors = executionResult.getErrors();
+
+    if (!errors.isEmpty()) {
+      LOG.error("GraphQL query returned errors:\n{}", errors.stream()
+          .map(GraphQLError::getMessage)
+          .map("- "::concat)
+          .collect(Collectors.joining("\n")));
+
+      throw new DelegateException(errors);
+    }
+
     return Result.newResult()
         .data(executionResult.getData())
         .build();

@@ -22,15 +22,25 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.dotwebstack.graphql.orchestrate.schema.Executor;
 import org.dotwebstack.graphql.orchestrate.schema.Subschema;
-import org.dotwebstack.graphql.orchestrate.transform.RenameTypes;
+import org.dotwebstack.graphql.orchestrate.transform.Transform;
+import org.dotwebstack.graphql.orchestrate.transform.TransformContext;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class SchemaWrapperTest {
+
+  @Mock
+  private Transform transform;
+
+  @Captor
+  private ArgumentCaptor<TransformContext> contextCaptor;
 
   @Mock
   private Executor executor;
@@ -44,7 +54,8 @@ class SchemaWrapperTest {
 
   @Test
   void wrap_appliesSchemaTransforms_onGivenSubschema() {
-    var transform = new RenameTypes((typeName, typeDefinition) -> typeName.equals("Brewery") ? "Company" : typeName);
+    var transformedSchema = originalSchema.transform(GraphQLSchema.Builder::build);
+    when(transform.transformSchema(any(), contextCaptor.capture())).thenReturn(transformedSchema);
 
     var subschema = Subschema.newSubschema()
         .schema(originalSchema)
@@ -53,8 +64,9 @@ class SchemaWrapperTest {
 
     var wrappedSchema = SchemaWrapper.wrap(subschema);
 
-    assertThat(wrappedSchema.containsType("Brewery"), is(false));
-    assertThat(wrappedSchema.containsType("Company"), is(true));
+    assertThat(wrappedSchema, Matchers.is(transformedSchema));
+    var context = contextCaptor.getValue();
+    assertThat(context.getSubschema(), is(subschema));
   }
 
   @Test

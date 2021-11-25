@@ -34,16 +34,16 @@ public class TransformUtils {
     var typeVisitor = new GraphQLTypeVisitorStub() {
       @Override
       public TraversalControl visitGraphQLObjectType(GraphQLObjectType node,
-          TraverserContext<GraphQLSchemaElement> context) {
+          TraverserContext<GraphQLSchemaElement> traverserContext) {
         return mapping.getObjectType()
-            .apply(node, context);
+            .apply(node, traverserContext);
       }
 
       @Override
       public TraversalControl visitGraphQLInterfaceType(GraphQLInterfaceType node,
-          TraverserContext<GraphQLSchemaElement> context) {
+          TraverserContext<GraphQLSchemaElement> traverserContext) {
         return mapping.getInterfaceType()
-            .apply(node, context);
+            .apply(node, traverserContext);
       }
     };
 
@@ -139,8 +139,8 @@ public class TransformUtils {
   }
 
   @SuppressWarnings("rawtypes")
-  public static List<String> getResultPath(TraverserContext<Node> context) {
-    return Lists.reverse(context.getParentNodes())
+  public static List<String> getResultPath(TraverserContext<Node> traverserContext) {
+    return Lists.reverse(traverserContext.getParentNodes())
         .stream()
         .filter(Field.class::isInstance)
         .map(Field.class::cast)

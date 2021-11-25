@@ -10,7 +10,7 @@ public interface Transform {
 
   Transform pipe(Transform transform);
 
-  GraphQLSchema transformSchema(GraphQLSchema originalSchema);
+  GraphQLSchema transformSchema(GraphQLSchema originalSchema, TransformContext context);
 
   CompletableFuture<Result> transform(Request originalRequest, Function<Request, CompletableFuture<Result>> next);
 }
