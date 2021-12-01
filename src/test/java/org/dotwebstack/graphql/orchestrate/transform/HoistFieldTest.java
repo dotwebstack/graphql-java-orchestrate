@@ -8,7 +8,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +15,7 @@ import graphql.language.AstPrinter;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLSchema;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -139,8 +139,11 @@ class HoistFieldTest {
 
     var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founderName}}");
 
+    Map<String, Object> data = new HashMap<>();
+    data.put("brewery", null);
+
     var proxyResult = Result.newResult()
-        .data(null)
+        .data(data)
         .build();
 
     when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
@@ -148,7 +151,7 @@ class HoistFieldTest {
     var result = transform.transform(originalRequest, nextMock)
         .get();
 
-    assertThat(result.getData(), is(nullValue()));
+    assertThat(result.getData(), equalTo(data));
   }
 
   @Test
