@@ -158,6 +158,10 @@ public class HoistField extends AbstractTransform {
 
   @SuppressWarnings("unchecked")
   private Result dehoistFields(Result result, List<HoistedField> hoistedFields) {
+    if (result.getData() == null) {
+      return result;
+    }
+
     Map<String, Object> data = (Map<String, Object>) hoistedFields.stream()
         .reduce(result.getData(), this::dehoistField, TransformUtils::noopCombiner);
 

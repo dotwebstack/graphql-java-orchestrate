@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -131,8 +132,28 @@ class HoistFieldTest {
   }
 
   @Test
+  void transform_returnsNull_ifNextReturnsNull() throws Exception {
+    var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
+
+    transform.transformSchema(originalSchema, context);
+
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founderName}}");
+
+    var proxyResult = Result.newResult()
+        .data(null)
+        .build();
+
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
+
+    var result = transform.transform(originalRequest, nextMock)
+        .get();
+
+    assertThat(result.getData(), is(nullValue()));
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_expandsSelectionSet_ifFieldRequested() throws Exception {
+  void transform_expandsSelectionSet_ifFieldRequested() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
     transform.transformSchema(originalSchema, context);
@@ -160,7 +181,7 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_replacesSelectionSet_ifFieldOverlaps() throws Exception {
+  void transform_replacesSelectionSet_ifFieldOverlaps() throws Exception {
     var transform = new HoistField("Brewery", "founder", List.of("founder", "name"));
 
     transform.transformSchema(originalSchema, context);
@@ -188,7 +209,7 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_mergesSelectionSet_ifSelectionsOverlap() throws Exception {
+  void transform_mergesSelectionSet_ifSelectionsOverlap() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
     transform.transformSchema(originalSchema, context);
@@ -216,7 +237,7 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_returnsListField_ifLeafSourceFieldIsList() throws Exception {
+  void transform_returnsListField_ifLeafSourceFieldIsList() throws Exception {
     var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
 
     transform.transformSchema(originalSchema, context);
@@ -244,7 +265,7 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_returnsListField_ifOtherSourceFieldIsList() throws Exception {
+  void transform_returnsListField_ifOtherSourceFieldIsList() throws Exception {
     var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
 
     transform.transformSchema(originalSchema, context);
