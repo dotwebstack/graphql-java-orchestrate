@@ -190,6 +190,10 @@ public class TransformUtils {
     var fieldKey = fieldPath.get(0);
     var fieldValue = data.get(fieldKey);
 
+    if (fieldValue == null) {
+      return putMapValue(data, fieldKey, null);
+    }
+
     // Recursively transform nested values, if final field has not been reached yet
     if (fieldPathSize > 1) {
       return putMapValue(data, fieldKey, mapTransform(fieldValue, fieldPath.subList(1, fieldPathSize), mapper));

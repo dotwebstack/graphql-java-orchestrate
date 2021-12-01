@@ -15,6 +15,7 @@ import graphql.language.AstPrinter;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLSchema;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -131,8 +132,31 @@ class HoistFieldTest {
   }
 
   @Test
+  void transform_returnsNull_ifNextReturnsNull() throws Exception {
+    var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
+
+    transform.transformSchema(originalSchema, context);
+
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founderName}}");
+
+    Map<String, Object> data = new HashMap<>();
+    data.put("brewery", null);
+
+    var proxyResult = Result.newResult()
+        .data(data)
+        .build();
+
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
+
+    var result = transform.transform(originalRequest, nextMock)
+        .get();
+
+    assertThat(result.getData(), equalTo(data));
+  }
+
+  @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_expandsSelectionSet_ifFieldRequested() throws Exception {
+  void transform_expandsSelectionSet_ifFieldRequested() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
     transform.transformSchema(originalSchema, context);
@@ -160,7 +184,7 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_replacesSelectionSet_ifFieldOverlaps() throws Exception {
+  void transform_replacesSelectionSet_ifFieldOverlaps() throws Exception {
     var transform = new HoistField("Brewery", "founder", List.of("founder", "name"));
 
     transform.transformSchema(originalSchema, context);
@@ -188,7 +212,7 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_mergesSelectionSet_ifSelectionsOverlap() throws Exception {
+  void transform_mergesSelectionSet_ifSelectionsOverlap() throws Exception {
     var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
 
     transform.transformSchema(originalSchema, context);
@@ -216,7 +240,7 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_returnsListField_ifLeafSourceFieldIsList() throws Exception {
+  void transform_returnsListField_ifLeafSourceFieldIsList() throws Exception {
     var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
 
     transform.transformSchema(originalSchema, context);
@@ -244,7 +268,7 @@ class HoistFieldTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  void transformRequest_returnsListField_ifOtherSourceFieldIsList() throws Exception {
+  void transform_returnsListField_ifOtherSourceFieldIsList() throws Exception {
     var transform = new HoistField("Brewery", "ambassadorNames", List.of("ambassadors", "name"));
 
     transform.transformSchema(originalSchema, context);
