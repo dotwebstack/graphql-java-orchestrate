@@ -92,7 +92,7 @@ public class TransformUtils {
         .anyMatch(field -> fieldName.equals(field.getName()));
   }
 
-  public static SelectionSet includeFieldPath(SelectionSet selectionSet, SelectionSet hoistedSelectionSet,
+  public static SelectionSet includeFieldPath(SelectionSet selectionSet, SelectionSet leafSelectionSet,
       List<String> fieldPath) {
     var fieldName = fieldPath.get(0);
     var fieldPathSize = fieldPath.size();
@@ -103,9 +103,9 @@ public class TransformUtils {
     if (!containsField(selectionSet, fieldName)) {
       selections = listAppend(selectionSet.getSelections(), Field.newField(fieldName)
           .selectionSet(fieldPathSize > 1
-              ? includeFieldPath(new SelectionSet(List.of()), hoistedSelectionSet,
+              ? includeFieldPath(new SelectionSet(List.of()), leafSelectionSet,
                   fieldPath.subList(1, fieldPath.size()))
-              : hoistedSelectionSet)
+              : leafSelectionSet)
           .build());
     } else {
       selections = selectionSet.getSelections()
@@ -116,13 +116,11 @@ public class TransformUtils {
 
               // Final field has been reached
               if (fieldPathSize == 1) {
-                field.transform(builder -> builder.selectionSet(hoistedSelectionSet)
-                    .build());
                 return field;
               }
 
               return field.transform(builder -> builder.selectionSet(
-                  includeFieldPath(field.getSelectionSet(), hoistedSelectionSet, fieldPath.subList(1, fieldPathSize))));
+                  includeFieldPath(field.getSelectionSet(), leafSelectionSet, fieldPath.subList(1, fieldPathSize))));
             }
 
             return selection;

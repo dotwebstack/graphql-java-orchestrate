@@ -301,4 +301,32 @@ class HoistFieldTest {
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier collaborators {identifier ambassadors {name}}}}"));
   }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void transform_returnsObjectField_ifLeafSourceFieldIsObject() throws Exception {
+    var transform = new HoistField("Brewery", "founderAddress", List.of("founder", "address"));
+
+    transform.transformSchema(originalSchema, context);
+
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier founderAddress{street}}}");
+
+    var proxyResult = Result.newResult()
+        .data(Map.of("brewery", Map.of("identifier", "foo", "founder", Map.of("address", Map.of("street", "bar")))))
+        .build();
+
+    when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(proxyResult));
+
+    var result = transform.transform(originalRequest, nextMock)
+        .get();
+
+    Map<String, Object> resultData = result.getData();
+    assertThat(resultData.size(), is(1));
+    assertThat(((Map<String, Object>) resultData.get("brewery")).get("founderAddress"), equalTo(Map.of("street", "bar")));
+
+    var transformedRequest = requestCaptor.getValue();
+
+    assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
+        equalTo("{brewery(identifier:\"foo\") {identifier founder {address {street}}}}"));
+  }
 }
