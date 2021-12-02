@@ -4,6 +4,7 @@ import static graphql.util.TraversalControl.CONTINUE;
 import static graphql.util.TreeTransformerUtil.changeNode;
 import static java.util.Collections.unmodifiableList;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.excludeField;
+import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getFieldSelectionSet;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getFieldValue;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.getResultPath;
 import static org.dotwebstack.graphql.orchestrate.transform.TransformUtils.includeFieldPath;
@@ -153,7 +154,8 @@ public class HoistField extends AbstractTransform {
   }
 
   private SelectionSet transformSelectionSet(SelectionSet selectionSet) {
-    return includeFieldPath(excludeField(selectionSet, targetFieldName), sourceFieldPath);
+    SelectionSet hoistedSelectionSet = getFieldSelectionSet(selectionSet, targetFieldName);
+    return includeFieldPath(excludeField(selectionSet, targetFieldName), hoistedSelectionSet, sourceFieldPath);
   }
 
   @SuppressWarnings("unchecked")
