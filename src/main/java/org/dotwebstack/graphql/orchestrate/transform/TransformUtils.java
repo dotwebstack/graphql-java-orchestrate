@@ -103,8 +103,7 @@ public class TransformUtils {
     if (!containsField(selectionSet, fieldName)) {
       selections = listAppend(selectionSet.getSelections(), Field.newField(fieldName)
           .selectionSet(fieldPathSize > 1
-              ? includeFieldPath(new SelectionSet(List.of()), leafSelectionSet,
-                  fieldPath.subList(1, fieldPath.size()))
+              ? includeFieldPath(new SelectionSet(List.of()), leafSelectionSet, fieldPath.subList(1, fieldPath.size()))
               : leafSelectionSet)
           .build());
     } else {

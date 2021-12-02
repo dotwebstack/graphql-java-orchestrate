@@ -322,7 +322,8 @@ class HoistFieldTest {
 
     Map<String, Object> resultData = result.getData();
     assertThat(resultData.size(), is(1));
-    assertThat(((Map<String, Object>) resultData.get("brewery")).get("founderAddress"), equalTo(Map.of("street", "bar")));
+    assertThat(((Map<String, Object>) resultData.get("brewery")).get("founderAddress"),
+        equalTo(Map.of("street", "bar")));
 
     var transformedRequest = requestCaptor.getValue();
 
