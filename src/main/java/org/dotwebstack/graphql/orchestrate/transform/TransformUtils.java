@@ -92,7 +92,8 @@ public class TransformUtils {
         .anyMatch(field -> fieldName.equals(field.getName()));
   }
 
-  public static SelectionSet includeFieldPath(SelectionSet selectionSet, List<String> fieldPath) {
+  public static SelectionSet includeFieldPath(SelectionSet selectionSet, SelectionSet leafSelectionSet,
+      List<String> fieldPath) {
     var fieldName = fieldPath.get(0);
     var fieldPathSize = fieldPath.size();
 
@@ -101,9 +102,9 @@ public class TransformUtils {
 
     if (!containsField(selectionSet, fieldName)) {
       selections = listAppend(selectionSet.getSelections(), Field.newField(fieldName)
-          .selectionSet(
-              fieldPathSize > 1 ? includeFieldPath(new SelectionSet(List.of()), fieldPath.subList(1, fieldPath.size()))
-                  : null)
+          .selectionSet(fieldPathSize > 1
+              ? includeFieldPath(new SelectionSet(List.of()), leafSelectionSet, fieldPath.subList(1, fieldPath.size()))
+              : leafSelectionSet)
           .build());
     } else {
       selections = selectionSet.getSelections()
@@ -117,8 +118,8 @@ public class TransformUtils {
                 return field;
               }
 
-              return field.transform(builder -> builder
-                  .selectionSet(includeFieldPath(field.getSelectionSet(), fieldPath.subList(1, fieldPathSize))));
+              return field.transform(builder -> builder.selectionSet(
+                  includeFieldPath(field.getSelectionSet(), leafSelectionSet, fieldPath.subList(1, fieldPathSize))));
             }
 
             return selection;
@@ -127,6 +128,15 @@ public class TransformUtils {
     }
 
     return selectionSet.transform(builder -> builder.selections(selections));
+  }
+
+  public static SelectionSet getFieldSelectionSet(SelectionSet selectionSet, String fieldName) {
+    return selectionSet.getSelections()
+        .stream()
+        .filter(selection -> isField(selection, fieldName))
+        .findFirst()
+        .map(selections -> ((Field) selections).getSelectionSet())
+        .orElse(null);
   }
 
   public static SelectionSet excludeField(SelectionSet selectionSet, String fieldName) {

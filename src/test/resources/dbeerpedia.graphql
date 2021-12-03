@@ -14,4 +14,11 @@ type Person {
   identifier: ID!
   name: String!
   hobbies: [String!]!
+  address: Address
+}
+
+type Address {
+  identifier: ID!
+  street: String!
+  houseNumber: Int
 }
