@@ -1,6 +1,7 @@
 package org.dotwebstack.graphql.orchestrate.transform;
 
 import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
+import static graphql.schema.GraphQLTypeUtil.unwrapOne;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.loadSchema;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.parseQuery;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -111,10 +112,28 @@ class HoistFieldTest {
   }
 
   @Test
-  void transformSchema_throwsException_IfPathContainsMultipleLists() {
-    var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies"));
+  void transformSchema_throwsException_IfPathContainsMultipleNonLeafLists() {
+    var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies", "id"));
 
     assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema, context));
+  }
+
+  @Test
+  void transformSchema_IfPathContainsOneNonLeafList() {
+    var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies"));
+    var transformedSchema = transform.transformSchema(originalSchema, context);
+
+    var targetField = transformedSchema.getObjectType("Brewery")
+        .getFieldDefinition("ambassadorHobbies");
+
+    assertThat(targetField, notNullValue());
+    assertThat(targetField.getType(), instanceOf(GraphQLNonNull.class));
+
+    var listType = unwrapOne(unwrapNonNull(targetField.getType()));
+
+    assertThat(listType, equalTo(originalSchema.getObjectType("Person")
+        .getFieldDefinition("hobbies")
+        .getType()));
   }
 
   @Test

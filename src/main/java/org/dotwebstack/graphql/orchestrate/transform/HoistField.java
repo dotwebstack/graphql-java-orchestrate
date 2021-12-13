@@ -92,16 +92,16 @@ public class HoistField extends AbstractTransform {
     var field = Optional.ofNullable(objectType.getFieldDefinition(fieldName))
         .orElseThrow(() -> new TransformException(String.format("Object field '%s' not found.", fieldName)));
 
+    if (fieldPathSize == 1) {
+      return field;
+    }
+
     if (GraphQLTypeUtil.unwrapNonNull(field.getType()) instanceof GraphQLList) {
       if (targetFieldList) {
         throw new TransformException("Source field path contains more than one list field.");
       }
 
       targetFieldList = true;
-    }
-
-    if (fieldPathSize == 1) {
-      return field;
     }
 
     var fieldType = GraphQLTypeUtil.unwrapAll(field.getType());
