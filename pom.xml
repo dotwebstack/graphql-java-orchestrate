@@ -147,7 +147,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>3.1.1</version>
+          <version>3.1.2</version>
           <executions>
             <execution>
               <id>validate</id>
@@ -168,14 +168,14 @@
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
               <artifactId>checkstyle</artifactId>
-              <version>8.32</version>
+              <version>9.2</version>
             </dependency>
           </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
-          <version>3.0.0-M3</version>
+          <version>3.0.0</version>
           <executions>
             <execution>
               <id>enforce-maven</id>
@@ -184,9 +184,6 @@
               </goals>
               <configuration>
                 <rules>
-                  <requireMavenVersion>
-                    <version>3.3.9</version>
-                  </requireMavenVersion>
                   <!-- Prevent transitive versioning conflicts -->
                   <dependencyConvergence />
                 </rules>
@@ -226,7 +223,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
-          <version>3.2.0</version>
+          <version>3.3.1</version>
           <configuration>
             <failOnError>false</failOnError>
           </configuration>
@@ -263,7 +260,7 @@
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.5</version>
+          <version>0.8.7</version>
           <executions>
             <execution>
               <id>default-prepare-agent</id>
