@@ -112,7 +112,7 @@ class HoistFieldTest {
 
   @Test
   void transformSchema_throwsException_IfPathContainsMultipleLists() {
-    var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies"));
+    var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies", "id"));
 
     assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema, context));
   }
