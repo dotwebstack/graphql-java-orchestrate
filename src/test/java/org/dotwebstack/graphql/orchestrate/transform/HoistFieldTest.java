@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -111,10 +112,17 @@ class HoistFieldTest {
   }
 
   @Test
-  void transformSchema_throwsException_IfPathContainsMultipleLists() {
+  void transformSchema_throwsException_IfPathContainsMultipleNonLeafLists() {
     var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies", "id"));
 
     assertThrows(TransformException.class, () -> transform.transformSchema(originalSchema, context));
+  }
+
+  @Test
+  void transformSchema_doesNotThrowException_IfPathContainsOneNonLeafLists() {
+    var transform = new HoistField("Brewery", "ambassadorHobbies", List.of("ambassadors", "hobbies"));
+
+    assertDoesNotThrow(() -> transform.transformSchema(originalSchema, context));
   }
 
   @Test
