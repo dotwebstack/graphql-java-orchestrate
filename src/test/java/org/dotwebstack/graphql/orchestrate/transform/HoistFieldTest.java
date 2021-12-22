@@ -2,6 +2,7 @@ package org.dotwebstack.graphql.orchestrate.transform;
 
 import static graphql.schema.GraphQLTypeUtil.unwrapNonNull;
 import static graphql.schema.GraphQLTypeUtil.unwrapOne;
+import static java.lang.String.format;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.loadSchema;
 import static org.dotwebstack.graphql.orchestrate.test.TestUtils.parseQuery;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -9,13 +10,19 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
 import graphql.language.AstPrinter;
+import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
+import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
+import graphql.schema.GraphQLTypeUtil;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -348,5 +355,37 @@ class HoistFieldTest {
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
         equalTo("{brewery(identifier:\"foo\") {identifier founder {address {street}}}}"));
+  }
+
+  @Test
+  void hoist_makesTargetFieldNullable_ifPathContainsNullableTypes() throws Exception {
+    var transform = new HoistField("Brewery", "cofounderName", List.of("cofounder", "name"));
+
+    GraphQLSchema transformed = transform.transformSchema(originalSchema, context);
+    GraphQLFieldDefinition cofounder = getObjectTypeFieldDef(transformed, "Brewery", "cofounderName");
+
+    assertTrue(GraphQLTypeUtil.isNullable(cofounder.getType()));
+  }
+
+  @Test
+  void hoist_usesTargetFieldNullabilty_ifPathContainsNoNullableTypes() throws Exception {
+    var transform = new HoistField("Brewery", "founderName", List.of("founder", "name"));
+
+    GraphQLSchema transformed = transform.transformSchema(originalSchema, context);
+    GraphQLFieldDefinition cofounder = getObjectTypeFieldDef(transformed, "Brewery", "founderName");
+
+    assertFalse(GraphQLTypeUtil.isNullable(cofounder.getType()));
+  }
+
+  private GraphQLFieldDefinition getObjectTypeFieldDef(GraphQLSchema schema, String type, String name) {
+    GraphQLObjectType objectType = (GraphQLObjectType) schema.getType(type);
+    if (objectType == null) {
+      fail(format("Type %s not found on schema", type));
+    }
+    GraphQLFieldDefinition result = objectType.getFieldDefinition(name);
+    if (result == null) {
+      fail(format("Field definition %s not found on type %s", name, type));
+    }
+    return result;
   }
 }

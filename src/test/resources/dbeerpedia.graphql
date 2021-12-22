@@ -6,6 +6,7 @@ type Brewery {
   identifier: ID!
   name: String!
   founder: Person!
+  cofounder: Person
   ambassadors: [Person!]!
   collaborators: [Brewery!]!
 }
