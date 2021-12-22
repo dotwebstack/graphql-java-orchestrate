@@ -68,7 +68,7 @@ public class HoistField extends AbstractTransform {
             return CONTINUE;
           }
 
-          var sourceField = findSourceField(objectType, sourceFieldPath);
+          var sourceField = findSourceField(objectType, sourceFieldPath, false);
           var hoistedField = sourceField.transform(builder -> builder.name(targetFieldName)
               .type(wrapListType(sourceField.getType())));
 
@@ -85,14 +85,24 @@ public class HoistField extends AbstractTransform {
     return targetFieldList ? GraphQLNonNull.nonNull(GraphQLList.list(type)) : type;
   }
 
-  private GraphQLFieldDefinition findSourceField(GraphQLObjectType objectType, List<String> fieldPath) {
+  private GraphQLFieldDefinition findSourceField(GraphQLObjectType objectType, List<String> fieldPath,
+      boolean isNullable) {
     var fieldName = fieldPath.get(0);
     var fieldPathSize = fieldPath.size();
 
     var field = Optional.ofNullable(objectType.getFieldDefinition(fieldName))
         .orElseThrow(() -> new TransformException(String.format("Object field '%s' not found.", fieldName)));
 
+    if (GraphQLTypeUtil.isNullable(field.getType())) {
+      isNullable = true;
+    }
+
     if (fieldPathSize == 1) {
+      if (isNullable) {
+        return field
+            .transform(builder -> builder.type((GraphQLOutputType) GraphQLTypeUtil.unwrapNonNull(field.getType()))
+                .build());
+      }
       return field;
     }
 
@@ -110,7 +120,7 @@ public class HoistField extends AbstractTransform {
       throw new TransformException("Non-leaf path segments must represent object types.");
     }
 
-    return findSourceField((GraphQLObjectType) fieldType, fieldPath.subList(1, fieldPathSize));
+    return findSourceField((GraphQLObjectType) fieldType, fieldPath.subList(1, fieldPathSize), isNullable);
   }
 
   @Override
