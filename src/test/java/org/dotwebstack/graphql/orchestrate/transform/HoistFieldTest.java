@@ -205,7 +205,7 @@ class HoistFieldTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier founder {name}}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier founder{name}}}"));
   }
 
   @Test
@@ -233,7 +233,7 @@ class HoistFieldTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier founder {name}}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier founder{name}}}"));
   }
 
   @Test
@@ -261,7 +261,7 @@ class HoistFieldTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier founder {identifier name}}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier founder{identifier name}}}"));
   }
 
   @Test
@@ -289,7 +289,7 @@ class HoistFieldTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier ambassadors {name}}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier ambassadors{name}}}"));
   }
 
   @Test
@@ -300,7 +300,7 @@ class HoistFieldTest {
     transform.transformSchema(originalSchema, context);
 
     var originalRequest =
-        parseQuery("{brewery(identifier:\"foo\") {identifier collaborators {identifier ambassadorNames}}}");
+        parseQuery("{brewery(identifier:\"foo\"){identifier collaborators {identifier ambassadorNames}}}");
 
     var proxyResult = Result.newResult()
         .data(Map.of("brewery",
@@ -325,7 +325,7 @@ class HoistFieldTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier collaborators {identifier ambassadors {name}}}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier collaborators{identifier ambassadors{name}}}}"));
   }
 
   @Test
@@ -354,7 +354,7 @@ class HoistFieldTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier founder {address {street}}}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier founder{address{street}}}}"));
   }
 
   @Test

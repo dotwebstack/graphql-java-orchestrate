@@ -56,7 +56,7 @@ class SimpleDelegatorTest {
     assertThat(executionInput.getVariables(), equalTo(Map.of()));
 
     var query = executionInput.getQuery();
-    assertThat(query, equalTo("query {\n  foo {\n    name\n  }\n}"));
+    assertThat(query, equalTo("{\n  foo {\n    name\n  }\n}"));
   }
 
   @Test
@@ -77,7 +77,7 @@ class SimpleDelegatorTest {
     assertThat(executionInput.getVariables(), equalTo(Map.of()));
 
     var query = executionInput.getQuery();
-    assertThat(query, equalTo("query {\n  foo(arg1: \"val1\") {\n    name\n  }\n}"));
+    assertThat(query, equalTo("{\n  foo(arg1: \"val1\") {\n    name\n  }\n}"));
   }
 
   @Test
