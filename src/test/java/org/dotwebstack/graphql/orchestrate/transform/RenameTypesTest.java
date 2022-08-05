@@ -45,7 +45,7 @@ class RenameTypesTest {
 
     transform.transformSchema(originalSchema, context);
 
-    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Company {name}}}");
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ...on Company {name}}}");
 
     when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(Result.newResult()
         .build()));
@@ -54,6 +54,6 @@ class RenameTypesTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier ... on Brewery {name}}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier ...on Brewery{name}}}"));
   }
 }

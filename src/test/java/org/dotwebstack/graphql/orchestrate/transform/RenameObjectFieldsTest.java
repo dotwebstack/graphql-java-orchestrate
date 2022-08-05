@@ -75,7 +75,7 @@ class RenameObjectFieldsTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{company:brewery(identifier:\"foo\") {identifier name}}"));
+        equalTo("{company:brewery(identifier:\"foo\"){identifier name}}"));
   }
 
   @Test
@@ -94,7 +94,7 @@ class RenameObjectFieldsTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier label:name}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier label:name}}"));
   }
 
   @Test
@@ -104,7 +104,7 @@ class RenameObjectFieldsTest {
 
     transform.transformSchema(originalSchema, context);
 
-    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ... on Brewery {label}}}");
+    var originalRequest = parseQuery("{brewery(identifier:\"foo\") {identifier ...on Brewery {label}}}");
 
     when(nextMock.apply(requestCaptor.capture())).thenReturn(CompletableFuture.completedFuture(Result.newResult()
         .build()));
@@ -113,6 +113,6 @@ class RenameObjectFieldsTest {
     var transformedRequest = requestCaptor.getValue();
 
     assertThat(AstPrinter.printAstCompact(transformedRequest.getSelectionSet()),
-        equalTo("{brewery(identifier:\"foo\") {identifier ... on Brewery {label:name}}}"));
+        equalTo("{brewery(identifier:\"foo\"){identifier ...on Brewery{label:name}}}"));
   }
 }
