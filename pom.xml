@@ -44,7 +44,7 @@
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
     <graphl-java.version>19.2</graphl-java.version>
-    <spring-boot.version>2.7.4</spring-boot.version>
+    <spring-boot.version>2.7.5</spring-boot.version>
     <sonar.organization>dotwebstack</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
