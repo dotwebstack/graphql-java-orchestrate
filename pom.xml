@@ -4,7 +4,7 @@
 
   <groupId>org.dotwebstack</groupId>
   <artifactId>graphql-java-orchestrate</artifactId>
-  <version>0.1.24-SNAPSHOT</version>
+  <version>0.1.24</version>
 
   <name>GraphQL Java Orchestrate</name>
   <url>https://github.com/dotwebstack/graphql-java-orchestrate</url>
@@ -28,7 +28,7 @@
     <url>https://github.com/dotwebstack/graphql-java-orchestrate</url>
     <connection>scm:git:https://github.com/dotwebstack/graphql-java-orchestrate.git</connection>
     <developerConnection>scm:git:https://github.com/dotwebstack/graphql-java-orchestrate.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>v0.1.24</tag>
   </scm>
 
   <developers>
