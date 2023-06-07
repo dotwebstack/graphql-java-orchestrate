@@ -41,8 +41,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <graphl-java.version>20.3</graphl-java.version>
     <spring-boot.version>2.7.12</spring-boot.version>
     <sonar.organization>dotwebstack</sonar.organization>
@@ -365,13 +365,13 @@
 
   <profiles>
     <profile>
-      <id>jdk11</id>
+      <id>jdk17</id>
       <activation>
-        <jdk>11</jdk>
+        <jdk>17</jdk>
       </activation>
       <properties>
-        <java.version>11</java.version>
-        <maven.compiler.release>11</maven.compiler.release>
+        <java.version>17</java.version>
+        <maven.compiler.release>17</maven.compiler.release>
       </properties>
     </profile>
     <profile>
